@@ -1,0 +1,129 @@
+# ===============================
+# 操作系统相关
+# ===============================
+.DS_Store
+Thumbs.db
+
+# ===============================
+# IDE / 编辑器
+# ===============================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# ===============================
+# Node.js / npm / yarn / pnpm
+# ===============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.lerna-debug.log*
+
+# 本地环境变量文件（不要提交！）
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ===============================
+# 构建输出目录（通用）
+# ===============================
+dist/
+build/
+out/
+*.exe
+*.dll
+*.bin
+*.o
+*.obj
+
+# ===============================
+# 日志文件
+# ===============================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===============================
+# 缓存 / 临时文件
+# ===============================
+.cache/
+*.cache
+*.tmp
+*.temp
+
+# ===============================
+# 前端相关（Vue 3）
+# ===============================
+# Vue CLI / Vite 构建输出
+dist/
+public/*.map
+
+# Vite / Vue 相关缓存
+.vite/
+*.local
+
+# 浏览器扩展开发相关（如适用）
+chrome-extension/
+
+# ===============================
+# 后端相关（NestJS）
+# ===============================
+# NestJS 编译输出（如果你用了 tsc 或 nest build）
+dist/
+# NestJS 的日志
+logs/
+*.log
+
+# NestJS 可能的 coverage 输出
+coverage/
+.nyc_output/
+
+# 测试相关缓存
+.jest/
+__tests__/
+*.spec.ts
+*.test.ts
+
+# 如果你使用 Prisma
+prisma/migrations/
+prisma/.history/
+
+# ===============================
+# 其他常见忽略
+# ===============================
+# 编辑器备份
+*~
+# macOS 文件
+._*
+# Windows 隐藏文件
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+# Package manager locks
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+# 可根据需要保留或删除 lock 文件，一般建议保留一个（比如团队统一用 pnpm/yarn）
+
+# ===============================
+# 可选：如果你有 docker 相关
+# ===============================
+docker-compose.override.yml
+.dockerignore
+Dockerfile
+# 如果你不希望提交 Docker 相关文件，可以加上；如果团队共用，也可保留
+
+# ===============================
+# 可选：Monorepo 工具（如 lerna、rush、nx 等，按需添加）
+# ===============================
+lerna-debug.log
+# 如果你没用到 lerna，可以无视

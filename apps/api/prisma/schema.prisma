@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // 推荐使用 PostgreSQL, 但也可以换成 mysql 或 sqlite
+  url      = env("DATABASE_URL")
+}
+
+// 定义标签的类型，是“情绪”还是“活动”
+enum TagType {
+  EMOTION
+  ACTIVITY
+}
+
+// 用于代表一个匿名的用户身份（基于设备或浏览器）
+model Profile {
+  // 我们使用 CUID 作为 ID，它比自增整数更适合分布式系统，也更安全
+  id            String      @id @default(cuid())
+  // 方便用户识别的匿名昵称和头像ID，可以在客户端生成
+  anonymousName String
+  avatarId      String
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // 一个 Profile 可以发布多条情绪记录
+  moodEntries   MoodEntry[]
+}
+
+// 情绪或活动的标签
+model Tag {
+  id   Int     @id @default(autoincrement())
+  name String  @unique // 标签名必须是唯一的, e.g., "开心", "工作"
+  type TagType // 使用上面定义的枚举类型
+
+  // 一个标签可以被用于多条情绪记录
+  moodEntries MoodEntry[]
+}
+
+// 代表用户发布的一条情绪记录
+model MoodEntry {
+  id        Int      @id @default(autoincrement())
+  // 选填的备注文字，提供了更高的灵活性
+  note      String?
+  createdAt DateTime @default(now())
+
+  // --- 关系定义 ---
+  
+  // 与 Profile 的关系 (一对多)
+  profile   Profile @relation(fields: [profileId], references: [id])
+  profileId String
+
+  // 与 Tag 的关系 (多对多)
+  // Prisma 会自动在后台创建和管理关联表
+  tags      Tag[]
+}
