@@ -104,12 +104,13 @@ const calendarAttributes = computed(() => [
   {
     key: 'entries',
     dot: true,
-    dates: allEntries.value.map(entry => new Date(entry.createdAt)),
+    dates: allEntries.value.map((entry: MoodEntryWithTags) => new Date(entry.createdAt)),
+
   }
 ]);
 
 const entriesForSelectedDate = computed(() => {
-  return allEntries.value.filter(entry => {
+  return allEntries.value.filter((entry: MoodEntryWithTags) => {
     const entryDate = new Date(entry.createdAt);
     return entryDate.toDateString() === selectedDate.value.toDateString();
   });

@@ -14,6 +14,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@aura/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@aura/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -35,9 +38,6 @@ importers:
       '@nestjs/swagger':
         specifier: ^11.2.0
         version: 11.2.0(@nestjs/common@11.1.6(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.6(@nestjs/common@11.1.6(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.6)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)
-      '@prisma/client':
-        specifier: ^6.16.1
-        version: 6.16.1(prisma@6.16.1(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
       body-parser:
         specifier: ^2.2.0
         version: 2.2.0
@@ -114,9 +114,6 @@ importers:
       prettier:
         specifier: ^3.4.2
         version: 3.6.2
-      prisma:
-        specifier: ^6.16.1
-        version: 6.16.1(magicast@0.3.5)(typescript@5.8.3)
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -248,11 +245,24 @@ importers:
         specifier: ^3.0.4
         version: 3.0.7(typescript@5.8.3)
 
-  packages/types:
+  packages/database:
     dependencies:
       '@prisma/client':
         specifier: ^6.16.1
         version: 6.16.1(prisma@6.16.1(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@22.18.3)(typescript@5.8.3)
+    devDependencies:
+      prisma:
+        specifier: ^6.16.1
+        version: 6.16.1(magicast@0.3.5)(typescript@5.8.3)
+
+  packages/types:
+    dependencies:
+      '@aura/database':
+        specifier: workspace:*
+        version: link:../database
 
 packages:
 
@@ -1842,8 +1852,8 @@ packages:
   '@sinclair/typebox@0.34.41':
     resolution: {integrity: sha512-6gS8pZzSXdyRHTIqoqSVknxolr1kzfy4/CeDnrzsVz8TTIWUbOBr6gnzOmTYJ3eXQNh4IYHIGi5aIL7sOZ2G/g==}
 
-  '@sindresorhus/is@7.0.2':
-    resolution: {integrity: sha512-d9xRovfKNz1SKieM0qJdO+PQonjnnIfSNWfHYnBSJ9hkjm0ZPw6HlxscDXYstp3z+7V2GOFHc+J0CYrYTjqCJw==}
+  '@sindresorhus/is@7.1.0':
+    resolution: {integrity: sha512-7F/yz2IphV39hiS2zB4QYVkivrptHHh0K8qJJd9HhuWSdvf8AN7NpebW3CcDZDBQsUPMoDKWsY2WWgW7bqOcfA==}
     engines: {node: '>=18'}
 
   '@sindresorhus/merge-streams@2.3.0':
@@ -8062,7 +8072,7 @@ snapshots:
   '@poppinss/dumper@0.6.4':
     dependencies:
       '@poppinss/colors': 4.1.5
-      '@sindresorhus/is': 7.0.2
+      '@sindresorhus/is': 7.1.0
       supports-color: 10.2.2
 
   '@poppinss/exception@1.2.2': {}
@@ -8238,7 +8248,7 @@ snapshots:
 
   '@sinclair/typebox@0.34.41': {}
 
-  '@sindresorhus/is@7.0.2': {}
+  '@sindresorhus/is@7.1.0': {}
 
   '@sindresorhus/merge-streams@2.3.0': {}
 

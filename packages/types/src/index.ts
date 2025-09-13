@@ -5,7 +5,7 @@ import type {
   MoodEntry as PrismaMoodEntry,
   Profile as PrismaProfile,
   TagType as PrismaTagType,
-} from "@prisma/client";
+} from "@aura/database/prisma/client";
 
 // 我们可以直接导出 Prisma 的类型，或者基于它创建我们自己的简化版
 // 对于 MVP，直接导出是最快最高效的

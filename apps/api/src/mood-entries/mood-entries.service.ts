@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateMoodEntryDto } from './dto/create-mood-entry.dto';
 import { paginate, PaginatedResult } from '../common/utils/pagination.util';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { MoodEntry } from '@prisma/client';
+import { MoodEntry } from '@aura/database/prisma/client';
 
 import { Logger } from '@nestjs/common';
 

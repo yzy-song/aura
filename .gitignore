@@ -96,6 +96,7 @@ __tests__/
 # 如果你使用 Prisma
 prisma/migrations/
 prisma/.history/
+packages/database/prisma/client/
 
 # ===============================
 # 其他常见忽略

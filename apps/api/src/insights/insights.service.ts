@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { TagType } from '@prisma/client';
+import { TagType } from '@aura/database/prisma/client';
 
 import { Logger } from '@nestjs/common';
 @Injectable()

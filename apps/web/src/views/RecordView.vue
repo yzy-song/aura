@@ -172,8 +172,8 @@ const newTagType = ref<TagType>('ACTIVITY');
 const newTagEmoji = ref('💡'); // 👇 2. 新增状态，并给一个默认值
 
 // --- Computed Properties ---
-const emotionTags = computed(() => allTags.value.filter((tag) => tag.type === 'EMOTION'));
-const activityTags = computed(() => allTags.value.filter((tag) => tag.type === 'ACTIVITY'));
+const emotionTags = computed(() => allTags.value.filter((tag: Tag) => tag.type === 'EMOTION'));
+const activityTags = computed(() => allTags.value.filter((tag: Tag) => tag.type === 'ACTIVITY'));
 
 // --- Logic ---
 onMounted(async () => {
@@ -224,7 +224,7 @@ const toggleSelection = (tag: Tag, selectionArray: Tag[]) => {
 };
 
 const isSelected = (tag: Tag) => {
-  return selectedTags.value.some((t) => t.id === tag.id);
+  return selectedTags.value.some((t: Tag) => t.id === tag.id);
 };
 
 const handleSubmit = async () => {
@@ -232,7 +232,7 @@ const handleSubmit = async () => {
     new Promise(async (resolve, reject) => {
       const response = await entryApi.post<MoodEntry>('/mood-entries', {
         note: note.value,
-        tagIds: selectedTags.value.map((t) => t.id),
+        tagIds: selectedTags.value.map((t: Tag) => t.id),
       });
 
       if (response && response.success) {

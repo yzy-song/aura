@@ -27,7 +27,6 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.0",
-    "@prisma/client": "^6.16.1",
     "body-parser": "^2.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
@@ -37,7 +36,8 @@
     "rxjs": "^7.8.1",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
-    "@aura/types": "workspace:*"
+    "@aura/types": "workspace:*",
+    "@aura/database": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -56,7 +56,6 @@
     "globals": "^16.0.0",
     "jest": "^30.0.0",
     "prettier": "^3.4.2",
-    "prisma": "^6.16.1",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
@@ -65,9 +64,6 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   },
   "jest": {
     "moduleFileExtensions": [

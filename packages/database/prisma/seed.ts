@@ -1,4 +1,4 @@
-import { PrismaClient, TagType } from '@prisma/client';
+import { PrismaClient, TagType } from '@aura/database/client';
 
 const prisma = new PrismaClient();
 

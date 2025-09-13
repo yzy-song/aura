@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TagType } from '@prisma/client';
+import { TagType } from '@aura/database/prisma/client';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateTagDto {
