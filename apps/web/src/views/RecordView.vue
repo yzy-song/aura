@@ -1,58 +1,57 @@
 <template>
   <div class="p-4 max-w-lg mx-auto">
-    <header class="text-center mb-6 mt-2">
-      <h1 class="text-2xl font-bold text-gray-800">How are you feeling now?</h1>
+    <header class="text-center mb-8 mt-4">
+      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">How are you feeling now?</h1>
     </header>
 
-    <div v-if="tagsApi.loading.value" class="text-center text-gray-500 py-10">Loading...</div>
+    <div v-if="tagsApi.loading.value" class="space-y-8 animate-pulse">
+      <div>
+        <div class="h-6 w-1/3 bg-gray-200 rounded mb-4"></div>
+        <div class="grid grid-cols-3 gap-3">
+          <div v-for="i in 6" :key="i" class="aspect-square bg-gray-200 rounded-2xl"></div>
+        </div>
+      </div>
+       <div>
+        <div class="h-6 w-1/3 bg-gray-200 rounded mb-4"></div>
+        <div class="grid grid-cols-3 gap-3">
+          <div v-for="i in 6" :key="i" class="aspect-square bg-gray-200 rounded-2xl"></div>
+        </div>
+      </div>
+    </div>
 
-    <div v-if="tagsApi.error.value" class="text-center text-red-500 p-4 bg-red-100 rounded-lg">
+    <div v-if="tagsApi.error.value && !tagsApi.loading.value" class="text-center text-red-500 p-4 bg-red-100 rounded-lg">
       Failed to load tags: {{ tagsApi.error.value }}
     </div>
 
     <form v-if="emotionTags.length" @submit.prevent="handleSubmit">
-      <section class="mb-6">
-        <h2 class="text-lg font-semibold text-gray-700 mb-3">Emotions</h2>
-        <div class="flex flex-wrap gap-3">
-          <button
+      <section class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Emotions</h2>
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          <TagCard
             v-for="tag in emotionTags"
             :key="tag.id"
-            type="button"
-            @click="toggleSelection(tag, selectedTags)"
-            :class="[
-              'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border',
-              isSelected(tag)
-                ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100',
-            ]"
-          >
-            {{ tag.name }}
-          </button>
-        </div>
-      </section>
-
-      <section class="mb-6">
-        <h2 class="text-lg font-semibold text-gray-700 mb-3">Activities</h2>
-        <div class="flex flex-wrap gap-3">
-          <button
-            v-for="tag in activityTags"
-            :key="tag.id"
-            type="button"
-            @click="toggleSelection(tag, selectedTags)"
-            :class="[
-              'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border',
-              isSelected(tag)
-                ? 'bg-purple-600 text-white border-purple-600 shadow-md'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100',
-            ]"
-          >
-            {{ tag.name }}
-          </button>
+            :tag="tag"
+            :is-selected="isSelected(tag)"
+            @select="toggleSelection(tag, selectedTags)"
+          />
         </div>
       </section>
 
       <section class="mb-8">
-        <label for="note" class="text-lg font-semibold text-gray-700 mb-3 block">Add a note (optional)</label>
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Activities</h2>
+         <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          <TagCard
+            v-for="tag in activityTags"
+            :key="tag.id"
+            :tag="tag"
+            :is-selected="isSelected(tag)"
+            @select="toggleSelection(tag, selectedTags)"
+          />
+        </div>
+      </section>
+
+      <section class="mb-8">
+        <label for="note" class="text-xl font-semibold text-gray-700 mb-4 block">Add a note (optional)</label>
         <textarea
           id="note"
           v-model="note"
@@ -70,35 +69,28 @@
         <span v-if="!entryApi.loading.value">Save Entry</span>
         <span v-else>Saving...</span>
       </button>
-
-      <div v-if="entryApi.error.value" class="mt-4 text-center text-red-500">
-        {{ entryApi.error.value }}
-      </div>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
+// Script 部分无需改动，逻辑完全复用！
 import { ref, onMounted, computed } from 'vue';
 import { useApi } from '@/composables/useApi';
-import type { MoodEntry, Tag } from '@aura/types'; // 从我们的共享包导入类型
+import type { Tag, MoodEntry } from '@aura/types';
 import { toast } from 'vue-sonner';
-// --- API Hooks ---
-// 为不同的 API 调用创建独立的 useApi 实例，这样它们的 loading/error 状态不会互相干扰
+import TagCard from '@/components/TagCard.vue';
+
 const tagsApi = useApi();
 const entryApi = useApi();
 
-// --- Component State ---
 const allTags = ref<Tag[]>([]);
 const selectedTags = ref<Tag[]>([]);
 const note = ref('');
 
-// --- Computed Properties ---
-// 动态计算出情绪和活动标签列表
 const emotionTags = computed(() => allTags.value.filter((tag) => tag.type === 'EMOTION'));
 const activityTags = computed(() => allTags.value.filter((tag) => tag.type === 'ACTIVITY'));
 
-// --- Logic ---
 onMounted(async () => {
   const response = await tagsApi.get<Tag[]>('/tags');
   if (response && response.success) {
@@ -120,35 +112,28 @@ const isSelected = (tag: Tag) => {
 };
 
 const handleSubmit = async () => {
-  // 👇 --- 2. 明确地告诉 promise resolve 的类型 --- 👇
   const promise = (): Promise<MoodEntry> =>
     new Promise(async (resolve, reject) => {
-      // 👇 --- 3. 调用 API 时，传入泛型参数 MoodEntry --- 👇
       const response = await entryApi.post<MoodEntry>('/mood-entries', {
         note: note.value,
         tagIds: selectedTags.value.map((t) => t.id),
       });
 
       if (response && response.success) {
-        // 现在 TypeScript 知道 response.data 是 MoodEntry 类型
         resolve(response.data);
       } else {
         reject(entryApi.error.value || 'Failed to save entry.');
       }
     });
 
-  toast.promise(promise(), { // 👈 4. 调用 promise 函数
+  toast.promise(promise(), {
     loading: 'Saving entry...',
-    // 👇 --- 5. 现在 _data 会被正确推断为 MoodEntry 类型 --- 👇
     success: (_data: MoodEntry) => {
-      // 提交成功后清空表单
       selectedTags.value = [];
       note.value = '';
       return 'Entry saved successfully!';
     },
-    error: (error: unknown) => {
-      return String(error);
-    },
+    error: (error: unknown) => String(error),
   });
 };
 </script>

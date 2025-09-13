@@ -36,6 +36,7 @@ model Profile {
 model Tag {
   id        Int      @id @default(autoincrement())
   name      String
+  emoji     String?
   type      TagType
   
   // --- 关键：添加与 Profile 的可选关系 ---
