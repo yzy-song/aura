@@ -1,15 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTagDto } from './dto/create-tag.dto';
-import { AppLogger } from '../common/utils/logger'; // 路径按实际调整
+
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class TagsService {
-  constructor(
-    private readonly logger: AppLogger,
-    private prisma: PrismaService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
+  private readonly logger = new Logger(TagsService.name);
   // 创建一个自定义标签
   async create(profileId: string, createTagDto: CreateTagDto) {
     this.logger.log(`创建标签: ${JSON.stringify(createTagDto)}`, TagsService.name);

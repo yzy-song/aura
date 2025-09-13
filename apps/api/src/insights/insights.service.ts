@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TagType } from '@prisma/client';
-import { AppLogger } from '../common/utils/logger'; // 引入你的日志类
 
+import { Logger } from '@nestjs/common';
 @Injectable()
 export class InsightsService {
-  constructor(
-    private prisma: PrismaService,
-    private readonly logger: AppLogger, // 注入日志
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
+  private readonly logger = new Logger(InsightsService.name); // 注入日志
   // --- 获取“我”的个人数据洞察 ---
   async getPersonalInsights(profileId: string) {
     this.logger.log(`获取个人数据洞察: profileId=${profileId}`, InsightsService.name);

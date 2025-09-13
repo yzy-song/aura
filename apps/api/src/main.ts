@@ -20,6 +20,7 @@ async function bootstrap() {
   // 2. 使用 Helmet 增强安全性
   app.use(helmet());
   // 3. 使用自定义的 AppLogger
+
   app.useLogger(new AppLogger());
 
   // --- Swagger 配置 ---
@@ -77,7 +78,7 @@ async function bootstrap() {
   // 7. 启动应用
   await app.listen(port, '0.0.0.0');
 
-  this.logger.log(`Application is running on: ${await app.getUrl()}`);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap().catch((err) => {
   console.error('Error during app bootstrap:', err);

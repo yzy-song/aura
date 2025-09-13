@@ -1,6 +1,7 @@
 import { LoggerService, Injectable, Scope } from '@nestjs/common';
 import { createLogger, format, transports, Logger } from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
+// 👇 --- 核心修改在这里 --- 👇
+import * as DailyRotateFile from 'winston-daily-rotate-file';
 import { type TransformableInfo } from 'logform';
 
 const { combine, timestamp, json, errors, colorize, printf } = format;
@@ -37,6 +38,7 @@ export class AppLogger implements LoggerService {
         new transports.Console({
           format: consoleFormat,
         }),
+        // 👇 --- 和这里 --- 👇
         new DailyRotateFile({
           format: fileFormat,
           filename: 'logs/application-%DATE%.log',

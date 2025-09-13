@@ -4,15 +4,14 @@ import { CreateMoodEntryDto } from './dto/create-mood-entry.dto';
 import { paginate, PaginatedResult } from '../common/utils/pagination.util';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { MoodEntry } from '@prisma/client';
-import { AppLogger } from '../common/utils/logger'; // 引入你的日志类
+
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class MoodEntriesService {
-  constructor(
-    private prisma: PrismaService,
-    private readonly logger: AppLogger, // 注入日志
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
+  private readonly logger = new Logger(MoodEntriesService.name);
   async create(profileId: string, createMoodEntryDto: CreateMoodEntryDto) {
     const { note, tagIds } = createMoodEntryDto;
 
