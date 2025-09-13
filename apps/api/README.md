@@ -1,98 +1,38 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+数据库设计总结
+数据库由三个核心模型（数据表）构成：Profile (身份档案)、Tag (标签) 和 MoodEntry (情绪记录)。
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+这个设计的核心目标是支撑一个匿名的、可扩展的情绪分享社区
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+二、 为什么这样设计？(设计理念)
+匿名优先 (Anonymity-First): 为了实现您提出的“无账号登录”和社区分享，我们没有使用传统的 Users 表，而是设计了 Profile 模型。它为每个用户（无论是否注册）提供了一个持久但匿名的身份，极大地降低了用户的使用门槛。
 
-## Description
+数据统一与灵活 (Consistency & Flexibility): 您预见到了预设标签和自定义标签的需求。我们没有用两张表或复杂的字段来处理，而是通过一个巧妙的设计，将所有标签都统一在 Tag 模型中，让数据既规范又灵活。
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+关系驱动 (Relation-Driven): 我们采用了现代数据库设计中的“多对多”关系。这使得一条情绪记录可以关联多个标签（例如同时记录“开心”和“工作”），这比最初的单标签设计更贴近真实生活，也为未来的数据分析提供了无限可能。
 
-## Project setup
+三、 关键字段是为了实现哪些功能？
+这是将您的想法变为现实的最关键部分：
 
-```bash
-$ pnpm install
-```
+在 Profile (身份档案) 表中:
 
-## Compile and run the project
+id: String @default(cuid()): 这是实现匿名登录的基石。即使用户不提供任何信息，我们也可以通过这个唯一的ID来识别他的所有操作，为他保存数据。
 
-```bash
-# development
-$ pnpm run start
+anonymousName 和 avatarId: 这两个字段是为了社区的展示。在公开的“情绪广场”上，每个用户都能有一个固定的匿名身份（如“开朗的长颈鹿”），增加了趣味性和社区感。
 
-# watch mode
-$ pnpm run start:dev
+在 Tag (标签) 表中:
 
-# production mode
-$ pnpm run start:prod
-```
+profileId: String?: 这是整个数据库设计中最关键、最巧妙的字段。
 
-## Run tests
+功能: 它完美地实现了**区分“系统标签”和“用户自定义标签”**的功能。
 
-```bash
-# unit tests
-$ pnpm run test
+原理: 当 profileId 为空 (null) 时，代表这是一个由您后台创建的、所有用户都能看到的系统预设标签。当 profileId 有值时，代表这是 profileId 对应的那个用户自己创建的私有自定义标签。
 
-# e2e tests
-$ pnpm run test:e2e
+@@unique([name, profileId]): 这个约束确保了系统标签的名字不会重复，同时也保证了同一个用户不能创建两个同名的自定义标签，保证了数据的整洁。
 
-# test coverage
-$ pnpm run test:cov
-```
+在 MoodEntry (情绪记录) 表中:
 
-## Deployment
+tags: Tag[]: 这是一个多对多关系。
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+功能: 它允许一条情绪记录同时关联多个标签。
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+相比您最初的设计: 这是一个巨大的升级。最初我们想的是一条记录只对应一个标签ID，现在则可以表达更复杂的情绪（比如：我感到**“平静”，因为我正在“阅读”**）。这让数据洞察的可能性大大增加。

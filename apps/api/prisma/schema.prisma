@@ -29,16 +29,23 @@ model Profile {
 
   // 一个 Profile 可以发布多条情绪记录
   moodEntries   MoodEntry[]
+  customTags    Tag[]
 }
 
 // 情绪或活动的标签
 model Tag {
-  id   Int     @id @default(autoincrement())
-  name String  @unique // 标签名必须是唯一的, e.g., "开心", "工作"
-  type TagType // 使用上面定义的枚举类型
+  id        Int      @id @default(autoincrement())
+  name      String
+  type      TagType
+  
+  // --- 关键：添加与 Profile 的可选关系 ---
+  profile   Profile? @relation(fields: [profileId], references: [id])
+  profileId String?  // 这个字段就是我们需要的过滤条件
 
-  // 一个标签可以被用于多条情绪记录
   moodEntries MoodEntry[]
+
+  // 同一个名字的标签，在全局（预设）和每个用户（自定义）中只能存在一个
+  @@unique([name, profileId])
 }
 
 // 代表用户发布的一条情绪记录

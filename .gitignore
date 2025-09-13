@@ -127,3 +127,6 @@ Dockerfile
 # ===============================
 lerna-debug.log
 # 如果你没用到 lerna，可以无视
+
+# Turbo
+.turbo
