@@ -1,13 +1,7 @@
 import { ref } from 'vue'
-import { apiClient } from '@/services/apiClient'
+import { api } from '@/services/apiClient'
 import { logger } from '@/utils/logger'
-
-export interface BackendResponse<T> {
-  success: boolean
-  data: T
-  message: string
-  meta?: Record<string, unknown>
-}
+import type { BackendResponse } from '@aura/types'
 
 type RequestData = Record<string, unknown>
 
@@ -22,28 +16,27 @@ export function useApi() {
   ): Promise<BackendResponse<T> | null> => {
     loading.value = true
     error.value = null
-
     try {
-      // 👇 --- 核心修正：在 await 之后，我们从返回的 AxiosResponse 中解构出 data 属性 --- 👇
+      // api.get 等方法已经返回了解包后的 BackendResponse<T>
       let response: BackendResponse<T>
       switch (method) {
         case 'get':
-          response = (await apiClient.get<BackendResponse<T>>(url, { params: data })).data
-          break
-        case 'delete':
-          response = (await apiClient.delete<BackendResponse<T>>(url)).data
+          response = await api.get<BackendResponse<T>>(url, { params: data })
           break
         case 'post':
-          response = (await apiClient.post<BackendResponse<T>>(url, data)).data
+          response = await api.post<BackendResponse<T>>(url, data)
           break
         case 'put':
-          response = (await apiClient.put<BackendResponse<T>>(url, data)).data
+          response = await api.put<BackendResponse<T>>(url, data)
+          break
+        case 'delete':
+          response = await api.delete<BackendResponse<T>>(url)
           break
         case 'patch':
-          response = (await apiClient.patch<BackendResponse<T>>(url, data)).data
+          response = await api.patch<BackendResponse<T>>(url, data)
           break
         default:
-          throw new Error(`Unsupported API method: ${method}`)
+          throw new Error(`Unsupported method: ${method}`)
       }
       return response
     } catch (err: unknown) {

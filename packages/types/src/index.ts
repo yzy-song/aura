@@ -30,3 +30,11 @@ export interface PaginatedResult<T> {
     lastPage: number;
   };
 }
+
+// 定义后端响应的标准结构
+export interface BackendResponse<T> {
+  success: boolean;
+  data: T;
+  message: string;
+  meta?: Record<string, unknown>;
+}
