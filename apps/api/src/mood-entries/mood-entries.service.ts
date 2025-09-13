@@ -4,20 +4,31 @@ import { CreateMoodEntryDto } from './dto/create-mood-entry.dto';
 import { paginate, PaginatedResult } from '../common/utils/pagination.util';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { MoodEntry } from '@prisma/client';
+import { AppLogger } from '../common/utils/logger'; // 引入你的日志类
+
 @Injectable()
 export class MoodEntriesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly logger: AppLogger, // 注入日志
+  ) {}
 
   async create(profileId: string, createMoodEntryDto: CreateMoodEntryDto) {
     const { note, tagIds } = createMoodEntryDto;
 
+    this.logger.log(
+      `创建情绪记录: profileId=${profileId}, note=${note}, tagIds=${JSON.stringify(tagIds)}`,
+      MoodEntriesService.name,
+    );
+
     // 验证 profileId
     const profile = await this.prisma.profile.findUnique({ where: { id: profileId } });
     if (!profile) {
+      this.logger.warn(`未找到用户: profileId=${profileId}`, MoodEntriesService.name);
       throw new NotFoundException('Profile not found');
     }
 
-    return this.prisma.moodEntry.create({
+    const entry = await this.prisma.moodEntry.create({
       data: {
         note,
         profileId: profileId,
@@ -27,23 +38,26 @@ export class MoodEntriesService {
         },
       },
     });
+
+    this.logger.log(`情绪记录创建成功: id=${entry.id}`, MoodEntriesService.name);
+    return entry;
   }
 
   // 获取“情绪广场”的公开信息流
-  findAll() {
+  async findAll() {
+    this.logger.log('查询情绪广场信息流', MoodEntriesService.name);
     return this.prisma.moodEntry.findMany({
       orderBy: {
-        createdAt: 'desc', // 按创建时间倒序排列
+        createdAt: 'desc',
       },
-      // 关键：同时查询出关联的数据
       include: {
         profile: {
           select: {
-            anonymousName: true, // 只选择需要的字段
+            anonymousName: true,
             avatarId: true,
           },
         },
-        tags: true, // 包含所有关联的标签
+        tags: true,
       },
     });
   }
@@ -51,6 +65,11 @@ export class MoodEntriesService {
   async findAllByProfile(profileId: string, paginationDto: PaginationDto): Promise<PaginatedResult<MoodEntry>> {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
+
+    this.logger.log(
+      `查询用户历史情绪记录: profileId=${profileId}, page=${page}, limit=${limit}`,
+      MoodEntriesService.name,
+    );
 
     const whereClause = { where: { profileId } };
 
@@ -70,27 +89,39 @@ export class MoodEntriesService {
       }),
     ]);
 
+    this.logger.log(`历史情绪记录查询完成: profileId=${profileId}, total=${total}`, MoodEntriesService.name);
+
     return paginate(data, total, page, limit);
   }
 
   async remove(profileId: string, moodEntryId: number) {
+    this.logger.log(`尝试删除情绪记录: profileId=${profileId}, moodEntryId=${moodEntryId}`, MoodEntriesService.name);
+
     // 1. 首先查找这条记录是否存在
     const moodEntry = await this.prisma.moodEntry.findUnique({
       where: { id: moodEntryId },
     });
 
     if (!moodEntry) {
+      this.logger.warn(`未找到情绪记录: moodEntryId=${moodEntryId}`, MoodEntriesService.name);
       throw new NotFoundException(`Mood entry with ID ${moodEntryId} not found`);
     }
 
-    // 2. 关键：验证这条记录是否属于当前操作的用户
+    // 2. 验证这条记录是否属于当前操作的用户
     if (moodEntry.profileId !== profileId) {
+      this.logger.warn(
+        `无权限删除情绪记录: profileId=${profileId}, moodEntryId=${moodEntryId}`,
+        MoodEntriesService.name,
+      );
       throw new ForbiddenException('You do not have permission to delete this entry');
     }
 
     // 3. 验证通过后，执行删除操作
-    return this.prisma.moodEntry.delete({
+    const result = await this.prisma.moodEntry.delete({
       where: { id: moodEntryId },
     });
+
+    this.logger.log(`情绪记录删除成功: moodEntryId=${moodEntryId}`, MoodEntriesService.name);
+    return result;
   }
 }

@@ -1,21 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TagType } from '@prisma/client';
+import { AppLogger } from '../common/utils/logger'; // 引入你的日志类
 
 @Injectable()
 export class InsightsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly logger: AppLogger, // 注入日志
+  ) {}
 
   // --- 获取“我”的个人数据洞察 ---
   async getPersonalInsights(profileId: string) {
+    this.logger.log(`获取个人数据洞察: profileId=${profileId}`, InsightsService.name);
+
     // 1. 统计我的情绪标签分布
     const emotionCounts = await this.getTagCounts(profileId, TagType.EMOTION);
 
     // 2. 统计我的活动标签分布
     const activityCounts = await this.getTagCounts(profileId, TagType.ACTIVITY);
 
-    // 未来可以增加更多个人洞察，比如情绪趋势图等
-    console.log('个人数据洞察 - profileId:', profileId);
+    this.logger.log(`个人数据洞察统计完成: profileId=${profileId}`, InsightsService.name);
+
     return {
       emotionCounts,
       activityCounts,
@@ -24,6 +30,8 @@ export class InsightsService {
 
   // --- 获取公开的社区数据洞察 ---
   async getPublicInsights() {
+    this.logger.log('获取社区公开数据洞察', InsightsService.name);
+
     // 1. 统计社区的情绪标签分布
     const emotionCounts = await this.getTagCounts(null, TagType.EMOTION);
 
@@ -32,6 +40,8 @@ export class InsightsService {
 
     // 3. 统计过去7天社区的情绪发布趋势
     const trend = await this.getPublicTrend(7);
+
+    this.logger.log('社区公开数据洞察统计完成', InsightsService.name);
 
     return {
       emotionCounts,
@@ -46,6 +56,8 @@ export class InsightsService {
    * @param tagType - EMOTION 或 ACTIVITY
    */
   private async getTagCounts(profileId: string | null, tagType: TagType) {
+    this.logger.log(`统计标签数量: profileId=${profileId ?? 'ALL'}, tagType=${tagType}`, InsightsService.name);
+
     const whereClause: any = {
       tags: { some: { type: tagType } },
     };
@@ -70,10 +82,16 @@ export class InsightsService {
       }
     }
 
-    // 转换为前端需要的格式并排序
-    return Array.from(tagCountMap.entries())
+    const result = Array.from(tagCountMap.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
+
+    this.logger.log(
+      `标签统计完成: profileId=${profileId ?? 'ALL'}, tagType=${tagType}, count=${result.length}`,
+      InsightsService.name,
+    );
+
+    return result;
   }
 
   /**
@@ -81,6 +99,8 @@ export class InsightsService {
    * @param days - 查询过去的天数
    */
   private async getPublicTrend(days: number) {
+    this.logger.log(`统计社区情绪趋势: days=${days}`, InsightsService.name);
+
     const result: any[] = await this.prisma.$queryRaw`
       SELECT DATE(T."createdAt")::text as date, COUNT(T.id)::int as count
       FROM "MoodEntry" AS T
@@ -88,6 +108,9 @@ export class InsightsService {
       GROUP BY DATE(T."createdAt")
       ORDER BY date ASC;
     `;
+
+    this.logger.log(`社区情绪趋势统计完成: days=${days}, count=${result.length}`, InsightsService.name);
+
     return result;
   }
 }
