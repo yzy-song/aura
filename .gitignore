@@ -111,7 +111,6 @@ Desktop.ini
 # Package manager locks
 package-lock.json
 yarn.lock
-pnpm-lock.yaml
 # 可根据需要保留或删除 lock 文件，一般建议保留一个（比如团队统一用 pnpm/yarn）
 
 # ===============================
