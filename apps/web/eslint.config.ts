@@ -19,6 +19,9 @@ export default defineConfigWithVueTs(
         tsconfigRootDir: __dirname,
       },
     },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   },
 
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),

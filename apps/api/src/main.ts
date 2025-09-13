@@ -45,12 +45,19 @@ async function bootstrap() {
   );
 
   // 5. 配置 CORS，允许前端应用访问
-  const frontendUrls =
-    configService.get<string>('FRONTEND_URL') ||
-    'https://aura.yzysong.com,http://localhost:5173'.split(',').map((url) => url.trim());
+  const frontendUrls = (configService.get<string>('FRONTEND_URL') || 'https://aura.yzysong.com,http://localhost:5173')
+    .split(',')
+    .map((url) => url.trim());
 
   app.enableCors({
-    origin: frontendUrls,
+    origin: (origin, callback) => {
+      // 允许本地开发和生产环境
+      if (!origin || frontendUrls.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     allowedHeaders: 'Content-Type, Authorization, Accept',
