@@ -1,12 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { TagType } from '@prisma/client';
-import { IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+
 export class CreateTagDto {
-  @ApiProperty({ example: '开心', description: '标签名称' })
+  @ApiProperty({ description: 'The name of the tag', example: 'Meditating' })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
   name: string;
 
-  @ApiProperty({ example: 'EMOTION', description: '标签类型，EMOTION 或 ACTIVITY' })
+  @ApiProperty({ description: 'The type of the tag', enum: TagType, example: TagType.ACTIVITY })
+  @IsEnum(TagType)
+  type: TagType;
+
+  // 👇 --- 添加 emoji 字段 --- 👇
+  @ApiProperty({ description: 'The emoji for the tag', example: '🧘', required: false })
+  @IsOptional() // 这个字段是可选的
   @IsString()
-  type: TagType; // 必须是 EMOTION 或 ACTIVITY,以后可扩展
+  @MaxLength(8) // Emoji 通常占 2-4 个字符
+  emoji?: string;
 }
