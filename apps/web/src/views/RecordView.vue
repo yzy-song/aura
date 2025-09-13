@@ -81,8 +81,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useApi } from '@/composables/useApi';
-import type { Tag } from '@aura/types'; // 从我们的共享包导入类型
-
+import type { MoodEntry, Tag } from '@aura/types'; // 从我们的共享包导入类型
+import { toast } from 'vue-sonner';
 // --- API Hooks ---
 // 为不同的 API 调用创建独立的 useApi 实例，这样它们的 loading/error 状态不会互相干扰
 const tagsApi = useApi();
@@ -120,17 +120,35 @@ const isSelected = (tag: Tag) => {
 };
 
 const handleSubmit = async () => {
-  const response = await entryApi.post('/mood-entries', {
-    note: note.value,
-    tagIds: selectedTags.value.map((t) => t.id),
-  });
+  // 👇 --- 2. 明确地告诉 promise resolve 的类型 --- 👇
+  const promise = (): Promise<MoodEntry> =>
+    new Promise(async (resolve, reject) => {
+      // 👇 --- 3. 调用 API 时，传入泛型参数 MoodEntry --- 👇
+      const response = await entryApi.post<MoodEntry>('/mood-entries', {
+        note: note.value,
+        tagIds: selectedTags.value.map((t) => t.id),
+      });
 
-  if (response && response.success) {
-    alert('Entry saved successfully!');
-    // 提交成功后清空表单
-    selectedTags.value = [];
-    note.value = '';
-  }
-  // 错误信息会由 entryApi.error 自动捕获并显示在模板中
+      if (response && response.success) {
+        // 现在 TypeScript 知道 response.data 是 MoodEntry 类型
+        resolve(response.data);
+      } else {
+        reject(entryApi.error.value || 'Failed to save entry.');
+      }
+    });
+
+  toast.promise(promise(), { // 👈 4. 调用 promise 函数
+    loading: 'Saving entry...',
+    // 👇 --- 5. 现在 _data 会被正确推断为 MoodEntry 类型 --- 👇
+    success: (_data: MoodEntry) => {
+      // 提交成功后清空表单
+      selectedTags.value = [];
+      note.value = '';
+      return 'Entry saved successfully!';
+    },
+    error: (error: unknown) => {
+      return String(error);
+    },
+  });
 };
 </script>

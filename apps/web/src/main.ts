@@ -1,5 +1,5 @@
 import './assets/main.css'
-
+import 'vue-sonner/style.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia' // 导入 createPinia
 
@@ -16,7 +16,12 @@ app.use(router)
 const profileStore = useProfileStore()
 
 // 2. 执行初始化操作
-profileStore.initProfile().then(() => {
-  // 3. 确保在获取到 profileId 之后再挂载应用
-  app.mount('#app')
-})
+profileStore
+  .initProfile()
+  .then(() => {
+    // 3. 确保在获取到 profileId 之后再挂载应用
+    app.mount('#app')
+  })
+  .catch((error) => {
+    console.error('Failed to initialize profile:', error)
+  })
