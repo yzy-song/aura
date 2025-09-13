@@ -38,3 +38,12 @@ export interface BackendResponse<T> {
   message: string;
   meta?: Record<string, unknown>;
 }
+
+// 定义一个包含了 tags 关系的 MoodEntry 类型
+export type MoodEntryWithTags = PrismaMoodEntry & {
+  tags: PrismaTag[];
+};
+
+// 明确定义 API 返回的分页数据结构
+export interface PaginatedMoodEntries
+  extends PaginatedResult<MoodEntryWithTags> {}

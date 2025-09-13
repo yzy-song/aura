@@ -23,6 +23,7 @@ export class TagsService {
       data: {
         name: createTagDto.name,
         type: createTagDto.type,
+        emoji: createTagDto.emoji,
         profileId: profileId, // 关联到当前用户
       },
     });
