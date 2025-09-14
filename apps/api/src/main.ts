@@ -13,19 +13,15 @@ import { join } from 'path';
 import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-  // 检查环境变量，只有在 "调试模式" 下才启用 NestJS 的默认日志
-  const isNestLoggingEnabled = process.env.NEST_LOGGING_ENABLED === 'true';
-
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    // 如果 isNestLoggingEnabled 是 true，就使用默认日志 (logger: undefined)
-    // 否则，禁用它，以便我们的 Winston 日志接管
-    logger: isNestLoggingEnabled ? undefined : false,
+    // 1. 完全禁用 NestJS 内置的日志，由我们自己的 Winston Logger 全权接管
+    logger: false,
   });
   // 2. 使用 Helmet 增强安全性
   app.use(helmet());
+  // 3. 使用自定义的 AppLogger
 
-  const logger = await app.resolve(AppLogger);
-  app.useLogger(logger);
+  app.useLogger(new AppLogger());
 
   // --- Swagger 配置 ---
   const config = new DocumentBuilder()
