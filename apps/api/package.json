@@ -9,6 +9,7 @@
     "build": "nest build",
     "render-build": "pnpm --dir ../.. run generate:types && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start:dev:verbose": "cross-env NEST_LOGGING_ENABLED=true nest start --watch",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "dev": "nest start --watch",
@@ -22,25 +23,27 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@aura/database": "workspace:*",
+    "@aura/types": "workspace:*",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.0",
+    "@prisma/client": "^6.16.1",
+    "axios": "^1.12.1",
     "body-parser": "^2.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "date-fns": "^4.1.0",
     "helmet": "^8.1.0",
     "logform": "^2.7.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "ts-node": "^10.9.2",
     "winston": "^3.17.0",
-    "winston-daily-rotate-file": "^5.0.0",
-    "@aura/types": "workspace:*",
-    "@aura/database": "workspace:*",
-    "@prisma/client": "^6.16.1",
-    "ts-node": "^10.9.2"
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -53,6 +56,7 @@
     "@types/logform": "^1.10.1",
     "@types/node": "^22.18.1",
     "@types/supertest": "^6.0.2",
+    "cross-env": "^10.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -63,7 +67,6 @@
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
-    
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"

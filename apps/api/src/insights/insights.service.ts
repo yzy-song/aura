@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TagType } from '@aura/database/prisma/client';
-
+import { subDays } from 'date-fns';
 import { Logger } from '@nestjs/common';
+import { AiService } from 'src/common/ai/ai.service';
 @Injectable()
 export class InsightsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private aiService: AiService,
+  ) {}
 
   private readonly logger = new Logger(InsightsService.name); // 注入日志
   // --- 获取“我”的个人数据洞察 ---
@@ -110,5 +114,30 @@ export class InsightsService {
     this.logger.log(`社区情绪趋势统计完成: days=${days}, count=${result.length}`, InsightsService.name);
 
     return result;
+  }
+
+  async getPersonalSummary(profileId: string, period: 'week' | 'month' = 'week'): Promise<{ summary: string }> {
+    const daysToSubtract = period === 'month' ? 30 : 7;
+
+    // 从数据库获取指定周期内的情绪记录
+    const entries = await this.prisma.moodEntry.findMany({
+      where: {
+        profileId,
+        createdAt: {
+          gte: subDays(new Date(), daysToSubtract),
+        },
+      },
+      include: {
+        tags: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    // 调用 AI 服务生成总结
+    const summaryText = await this.aiService.generateSummary(entries);
+
+    return { summary: summaryText };
   }
 }

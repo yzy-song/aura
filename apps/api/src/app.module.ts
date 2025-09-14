@@ -7,6 +7,8 @@ import { TagsModule } from './tags/tags.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { MoodEntriesModule } from './mood-entries/mood-entries.module';
 import { InsightsModule } from './insights/insights.module';
+import { AiModule } from './common/ai/ai.module';
+import { AppLogger } from './common/utils/logger';
 
 @Module({
   imports: [
@@ -19,8 +21,9 @@ import { InsightsModule } from './insights/insights.module';
     ProfilesModule,
     MoodEntriesModule,
     InsightsModule,
+    AiModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AppLogger],
 })
 export class AppModule {}

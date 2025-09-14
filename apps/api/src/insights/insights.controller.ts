@@ -1,4 +1,4 @@
-import { Controller, Get, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Query, UnauthorizedException } from '@nestjs/common';
 import { InsightsService } from './insights.service';
 import { ProfileId } from '../common/decorators/profile-id.decorator';
 import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
@@ -29,5 +29,16 @@ export class InsightsController {
   @ApiCommonResponses()
   getPublicInsights() {
     return this.insightsService.getPublicInsights();
+  }
+
+  @Get('mine/summary')
+  @ApiOperation({ summary: '获取“我”的 AI 周期总结报告' })
+  @ApiHeader({ name: 'x-profile-id', required: true })
+  @ApiCommonResponses()
+  getPersonalSummary(@ProfileId() profileId: string, @Query('period') period?: 'week' | 'month') {
+    if (!profileId) {
+      throw new UnauthorizedException('x-profile-id header is required');
+    }
+    return this.insightsService.getPersonalSummary(profileId, period);
   }
 }

@@ -13,15 +13,19 @@ import { join } from 'path';
 import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
+  // 检查环境变量，只有在 "调试模式" 下才启用 NestJS 的默认日志
+  const isNestLoggingEnabled = process.env.NEST_LOGGING_ENABLED === 'true';
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    // 1. 完全禁用 NestJS 内置的日志，由我们自己的 Winston Logger 全权接管
-    logger: false,
+    // 如果 isNestLoggingEnabled 是 true，就使用默认日志 (logger: undefined)
+    // 否则，禁用它，以便我们的 Winston 日志接管
+    logger: isNestLoggingEnabled ? undefined : false,
   });
   // 2. 使用 Helmet 增强安全性
   app.use(helmet());
-  // 3. 使用自定义的 AppLogger
 
-  app.useLogger(new AppLogger());
+  const logger = await app.resolve(AppLogger);
+  app.useLogger(logger);
 
   // --- Swagger 配置 ---
   const config = new DocumentBuilder()
@@ -32,6 +36,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document); // <-- 'api-docs' 是访问路径
+  console.log(`Swagger API docs available at http://localhost:3005/api-docs`);
   // --- Swagger 配置结束 ---
 
   const configService = app.get(ConfigService);

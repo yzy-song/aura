@@ -1,4 +1,4 @@
-import { PaginationDto } from 'src/common/dot/pagination.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMoodEntryDto } from './dto/create-mood-entry.dto';
 import { paginate, PaginatedResult } from '../common/utils/pagination.util';

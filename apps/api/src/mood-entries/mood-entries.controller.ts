@@ -5,7 +5,7 @@ import { ProfileId } from '../common/decorators/profile-id.decorator';
 import { ApiHeader, ApiOperation } from '@nestjs/swagger';
 import { ApiResponse } from '@nestjs/swagger';
 import { ApiCommonResponses } from 'src/common/decorators/api-common-responses.decorator';
-import { PaginationDto } from 'src/common/dot/pagination.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('mood-entries')
 export class MoodEntriesController {
