@@ -12,16 +12,25 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as bodyParser from 'body-parser';
 
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err && (err.stack || err));
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+});
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     // 1. 完全禁用 NestJS 内置的日志，由我们自己的 Winston Logger 全权接管
     logger: false,
+    abortOnError: false,
   });
   // 2. 使用 Helmet 增强安全性
   app.use(helmet());
   // 3. 使用自定义的 AppLogger
 
-  app.useLogger(new AppLogger());
+  const logger = await app.resolve(AppLogger);
+  app.useLogger(logger);
 
   // --- Swagger 配置 ---
   const config = new DocumentBuilder()
