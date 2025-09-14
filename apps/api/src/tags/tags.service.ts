@@ -30,7 +30,7 @@ export class TagsService {
   }
 
   // 获取所有系统预设标签
-  async findAllSystemTags() {
+  findAllSystemTags() {
     this.logger.log('查询所有系统标签', TagsService.name);
 
     return this.prisma.tag.findMany({
