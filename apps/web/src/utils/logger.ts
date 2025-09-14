@@ -2,7 +2,6 @@
 import type { App } from 'vue'
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
-type LogMessage = string | object | Error
 
 interface LoggerOptions {
   persistErrors?: boolean // 是否持久化错误日志（如发送到服务器）
@@ -36,7 +35,7 @@ class Logger {
     return LOG_LEVELS[level] >= LOG_LEVELS[currentLogLevel]
   }
 
-  private formatMessage(level: LogLevel, ...args: any[]): string {
+  private formatMessage(level: LogLevel, ...args: unknown[]): string {
     const timestamp = new Date().toISOString()
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`
     return `${prefix}: ${args
@@ -54,7 +53,7 @@ class Logger {
     }
   }
 
-  debug(...args: any[]) {
+  debug(...args: unknown[]) {
     if (this.shouldLog('debug') && isDev) {
       const message = this.formatMessage('debug', ...args)
       console.debug(message)
@@ -62,11 +61,11 @@ class Logger {
     }
   }
 
-  log(...args: any[]) {
+  log(...args: unknown[]) {
     this.info(...args) // 直接调用现有的 info 方法
   }
 
-  info(...args: any[]) {
+  info(...args: unknown[]) {
     if (this.shouldLog('info')) {
       const message = this.formatMessage('info', ...args)
       console.info(message)
@@ -74,7 +73,7 @@ class Logger {
     }
   }
 
-  warn(...args: any[]) {
+  warn(...args: unknown[]) {
     if (this.shouldLog('warn')) {
       const message = this.formatMessage('warn', ...args)
       console.warn(message)
@@ -82,7 +81,7 @@ class Logger {
     }
   }
 
-  error(...args: any[]) {
+  error(...args: unknown[]) {
     if (this.shouldLog('error')) {
       const message = this.formatMessage('error', ...args)
       console.error(message)
@@ -95,7 +94,7 @@ class Logger {
     }
   }
 
-  private sendErrorToServer(args: any[]) {
+  private sendErrorToServer(args: unknown[]) {
     // 实际项目中使用Sentry/LogRocket等工具
     console.warn('Error would be sent to server:', args)
   }

@@ -14,31 +14,13 @@ export function useApi() {
     url: string,
     data?: RequestData,
   ): Promise<BackendResponse<T> | null> => {
+    // <-- Return the full BackendResponse
     loading.value = true
     error.value = null
     try {
-      // api.get 等方法已经返回了解包后的 BackendResponse<T>
-      let response: BackendResponse<T>
-      switch (method) {
-        case 'get':
-          response = await api.get<BackendResponse<T>>(url, { params: data })
-          break
-        case 'post':
-          response = await api.post<BackendResponse<T>>(url, data)
-          break
-        case 'put':
-          response = await api.put<BackendResponse<T>>(url, data)
-          break
-        case 'delete':
-          response = await api.delete<BackendResponse<T>>(url)
-          break
-        case 'patch':
-          response = await api.patch<BackendResponse<T>>(url, data)
-          break
-        default:
-          throw new Error(`Unsupported method: ${method}`)
-      }
-      return response
+      // The `api.get`, `api.post` etc. methods already return the BackendResponse object
+      const response = await api[method]<BackendResponse<T>>(url, data)
+      return response // <-- Return it directly
     } catch (err: unknown) {
       if (err instanceof Error) {
         error.value = err.message

@@ -5,7 +5,7 @@
  * @param immediate 是否立即执行一次。
  * @returns 返回新的防抖函数。
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number,
   immediate = false,
@@ -36,7 +36,7 @@ export function debounce<T extends (...args: any[]) => any>(
  * @param wait 需要节流的毫秒数。
  * @returns 返回新的节流函数。
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number,
 ): (...args: Parameters<T>) => void {

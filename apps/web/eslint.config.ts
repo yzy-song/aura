@@ -21,6 +21,7 @@ export default defineConfigWithVueTs(
     },
     rules: {
       // 采纳的优秀规则
+      'vue/multi-word-component-names': 'off',
       '@typescript-eslint/interface-name-prefix': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',

@@ -7,11 +7,13 @@ import App from './App.vue'
 import router from './router'
 import { useProfileStore } from './stores/profile.store' // 导入我们创建的 store
 
+import VCalendar from 'v-calendar'
 const app = createApp(App)
 
 app.use(createPinia()) // 注册 Pinia
 app.use(router)
 
+app.use(VCalendar, {}) // 必须有这行
 // 1. 获取 profile store 的实例
 const profileStore = useProfileStore()
 

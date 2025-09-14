@@ -4,6 +4,10 @@ import { TagType } from '@aura/database/prisma/client';
 import { subDays } from 'date-fns';
 import { Logger } from '@nestjs/common';
 import { AiService } from 'src/common/ai/ai.service';
+import { format } from 'date-fns';
+// 定义时间周期类型，与 Controller 中保持一致
+type SummaryPeriod = '3days' | 'week' | '2weeks' | 'month';
+
 @Injectable()
 export class InsightsService {
   constructor(
@@ -116,28 +120,56 @@ export class InsightsService {
     return result;
   }
 
-  async getPersonalSummary(profileId: string, period: 'week' | 'month' = 'week'): Promise<{ summary: string }> {
-    const daysToSubtract = period === 'month' ? 30 : 7;
+  // 👇 --- 带缓存的总结报告方法 --- 👇
+  async getPersonalSummary(profileId: string, period: SummaryPeriod): Promise<{ summary: string }> {
+    // 1. 创建一个从周期到天数的映射
+    const periodToDaysMap: Record<SummaryPeriod, number> = {
+      '3days': 3,
+      week: 7,
+      '2weeks': 14,
+      month: 30,
+    };
+    const daysToSubtract = periodToDaysMap[period];
 
-    // 从数据库获取指定周期内的情绪记录
+    // 2. 为“滚动窗口”生成一个基于当天日期的、唯一的缓存键
+    // 这样，每天的“最近7天”都会是一个新的缓存
+    const now = new Date();
+    const periodKey = `${period}-ending-${format(now, 'yyyy-MM-dd')}`;
+
+    // 3. 尝试从数据库中查找缓存
+    const cachedSummary = await this.prisma.aiSummary.findUnique({
+      where: { profileId_period: { profileId, period: periodKey } },
+    });
+
+    if (cachedSummary) {
+      console.log(`[Cache HIT] Found summary for ${profileId} for period ${periodKey}`);
+      return { summary: cachedSummary.summary };
+    }
+
+    console.log(`[Cache MISS] No summary for ${profileId}, period ${periodKey}. Generating new one...`);
+
+    // 4. 如果没有缓存，则从数据库获取相应天数的数据
     const entries = await this.prisma.moodEntry.findMany({
       where: {
         profileId,
-        createdAt: {
-          gte: subDays(new Date(), daysToSubtract),
-        },
+        createdAt: { gte: subDays(now, daysToSubtract) },
       },
-      include: {
-        tags: true,
-      },
-      orderBy: {
-        createdAt: 'asc',
+      include: { tags: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // 5. 调用 AI 服务生成新的总结
+    const newSummaryText = await this.aiService.generateSummary(entries);
+
+    // 6. 将新生成的总结存入数据库
+    await this.prisma.aiSummary.create({
+      data: {
+        profileId,
+        period: periodKey,
+        summary: newSummaryText,
       },
     });
 
-    // 调用 AI 服务生成总结
-    const summaryText = await this.aiService.generateSummary(entries);
-
-    return { summary: summaryText };
+    return { summary: newSummaryText };
   }
 }

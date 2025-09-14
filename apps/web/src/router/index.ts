@@ -22,6 +22,11 @@ const router = createRouter({
       name: 'insights',
       component: () => import('../views/InsightsView.vue'),
     },
+    {
+      path: '/insights',
+      name: 'insights',
+      component: () => import('../views/InsightsView.vue'),
+    },
   ],
 })
 

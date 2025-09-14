@@ -21,6 +21,53 @@
     </div>
 
     <div v-if="insightsData && !api.loading.value" class="space-y-8">
+      <section
+        v-if="activeTab === 'mine'"
+        class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"
+      >
+        <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-4">
+          <span class="material-symbols-outlined text-yellow-500">auto_awesome</span>
+          <span>Your AI-Powered Reflection</span>
+        </h2>
+
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button
+            v-for="p in periods"
+            :key="p.value"
+            @click="selectedPeriod = p.value"
+            :class="[
+              'px-3 py-1 text-xs font-semibold rounded-full transition-colors',
+              selectedPeriod === p.value
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+            ]"
+          >
+            {{ p.label }}
+          </button>
+        </div>
+
+        <div class="relative bg-blue-50/50 p-4 rounded-lg min-h-[120px]">
+          <Transition name="fade">
+            <div
+              v-if="summaryApi.loading.value"
+              class="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center rounded-lg"
+            >
+              <div class="text-gray-500 animate-pulse">Generating your new summary...</div>
+            </div>
+          </Transition>
+
+          <div v-if="summaryApi.error.value" class="text-red-600 text-sm flex items-center justify-center h-full">
+            Sorry, I couldn't generate a summary right now.
+          </div>
+          <p v-else-if="summary" class="text-gray-800 leading-relaxed transition-opacity duration-300">
+            {{ summary }}
+          </p>
+          <div v-else class="text-gray-500 flex items-center justify-center h-full">
+            Select a period to generate your summary.
+          </div>
+        </div>
+      </section>
+
       <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
         <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-4">
           <span class="material-symbols-outlined text-blue-500">pie_chart</span>
@@ -59,40 +106,58 @@ import LineChart from '@/components/LineChart.vue';
 import { format } from 'date-fns';
 
 // --- Types ---
-interface TagCount {
-  name: string;
-  count: number;
-}
-interface TrendData {
-  date: string;
-  count: number;
-}
+type SummaryPeriod = '3days' | 'week' | '2weeks' | 'month';
+interface TagCount { name: string; count: number; }
+interface TrendData { date: string; count: number; }
 interface InsightsData {
   emotionCounts: TagCount[];
   activityCounts: TagCount[];
   trend?: TrendData[];
 }
+interface SummaryData {
+  summary: string;
+}
 
 // --- Component State & API ---
 const api = useApi();
+const summaryApi = useApi(); // Separate instance for the summary card's state
 const activeTab = ref<'mine' | 'public'>('mine');
 const insightsData = ref<InsightsData | null>(null);
 
+// State for the AI summary feature
+const selectedPeriod = ref<SummaryPeriod>('week');
+const summary = ref<string>('');
+const periods: { label: string; value: SummaryPeriod }[] = [
+  { label: 'Last 3 Days', value: '3days' },
+  { label: 'Last Week', value: 'week' },
+  { label: 'Last 2 Weeks', value: '2weeks' },
+  { label: 'Last Month', value: 'month' },
+];
+
 // --- Logic ---
-const fetchData = async () => {
+const fetchChartData = async () => {
   const endpoint = activeTab.value === 'mine' ? '/insights/mine' : '/insights/public';
   const response = await api.get<InsightsData>(endpoint);
-  if (response && response.success) {
-    insightsData.value = response.data;
-  } else {
-    insightsData.value = null;
-  }
+  insightsData.value = response?.success ? response.data : null;
 };
 
-// Watch for tab changes and fetch data accordingly
-watch(activeTab, fetchData, { immediate: true });
+const fetchSummary = async () => {
+  if (activeTab.value !== 'mine') return;
+  const response = await summaryApi.get<SummaryData>(`/insights/mine/summary?period=${selectedPeriod.value}`);
+  summary.value = response?.success ? response.data.summary : '';
+};
 
-// --- Computed properties to format data for charts ---
+// Watch for changes and fetch data accordingly
+watch(activeTab, (newTab) => {
+  fetchChartData();
+  if (newTab === 'mine') {
+    fetchSummary();
+  }
+}, { immediate: true });
+
+watch(selectedPeriod, fetchSummary);
+
+// --- Computed properties for charts (no changes) ---
 const emotionChartData = computed(() => {
   const labels = insightsData.value?.emotionCounts.map(item => item.name) || [];
   const data = insightsData.value?.emotionCounts.map(item => item.count) || [];
@@ -124,8 +189,8 @@ const trendChartData = computed(() => {
   return {
     labels,
     datasets: [{
-      label: 'Entries per day',
-      backgroundColor: '#22C55E',
+      label: 'Moments per day',
+      backgroundColor: '#22C55E20',
       borderColor: '#16A34A',
       data,
       fill: true,
@@ -134,16 +199,10 @@ const trendChartData = computed(() => {
   };
 });
 
-
-// --- Helper for styling the active tab ---
 const tabClass = (tabName: 'mine' | 'public') => {
   return [
     'px-4 py-2 text-sm font-semibold rounded-full transition-colors duration-300 focus:outline-none',
-    activeTab.value === tabName
-      ? 'bg-white text-blue-600 shadow'
-      // The following is a Tailwind JIT trick to ensure the class is generated
-      // bg-white text-blue-600 shadow text-gray-600
-      : 'text-gray-600'
+    activeTab.value === tabName ? 'bg-white text-blue-600 shadow' : 'text-gray-600'
   ];
 };
 </script>

@@ -17,6 +17,19 @@ enum TagType {
   ACTIVITY
 }
 
+model AiSummary {
+  id        Int      @id @default(autoincrement())
+  period    String   // e.g., "week-2025-37" or "month-2025-09"
+  summary   String   @db.Text
+  createdAt DateTime @default(now())
+
+  profile   Profile @relation(fields: [profileId], references: [id])
+  profileId String
+
+  // 关键：一个用户对同一个周期，只能有一份总结报告
+  @@unique([profileId, period])
+}
+
 // 用于代表一个匿名的用户身份（基于设备或浏览器）
 model Profile {
   // 我们使用 CUID 作为 ID，它比自增整数更适合分布式系统，也更安全
@@ -31,6 +44,7 @@ model Profile {
   // 一个 Profile 可以发布多条情绪记录
   moodEntries   MoodEntry[]
   customTags    Tag[]
+  aiSummaries   AiSummary[]
 }
 
 // 情绪或活动的标签

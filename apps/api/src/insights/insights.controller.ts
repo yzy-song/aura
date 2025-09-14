@@ -4,6 +4,10 @@ import { ProfileId } from '../common/decorators/profile-id.decorator';
 import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
 import { ApiCommonResponses } from '../common/decorators/api-common-responses.decorator';
 
+// 👇 定义总结报告周期类型
+type SummaryPeriod = '3days' | 'week' | '2weeks' | 'month';
+const DEFAULT_PERIOD: SummaryPeriod = 'week';
+
 @ApiTags('Insights')
 @Controller('insights')
 export class InsightsController {
@@ -35,7 +39,7 @@ export class InsightsController {
   @ApiOperation({ summary: '获取“我”的 AI 周期总结报告' })
   @ApiHeader({ name: 'x-profile-id', required: true })
   @ApiCommonResponses()
-  getPersonalSummary(@ProfileId() profileId: string, @Query('period') period?: 'week' | 'month') {
+  getPersonalSummary(@ProfileId() profileId: string, @Query('period') period: SummaryPeriod = DEFAULT_PERIOD) {
     if (!profileId) {
       throw new UnauthorizedException('x-profile-id header is required');
     }

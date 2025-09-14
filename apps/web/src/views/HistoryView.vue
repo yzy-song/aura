@@ -15,55 +15,60 @@
 
     <section v-if="!api.error.value" class="bg-white p-2 sm:p-4 rounded-xl shadow-sm border border-gray-100 mb-8">
       <VCalendar
-        v-model="selectedDate"
         :attributes="calendarAttributes"
         borderless
         expanded
         title-position="left"
         class="custom-calendar"
+        @dayclick="onDayClick"
       />
     </section>
 
     <section v-if="!api.error.value">
       <h2 class="text-xl font-bold text-gray-800 mb-4">
-        Entries for <span class="text-blue-600">{{ formattedSelectedDate }}</span>
+        Moments for <span class="text-blue-600">{{ formattedSelectedDate }}</span>
       </h2>
 
-      <TransitionGroup
-        tag="div"
-        class="space-y-4"
-        enter-from-class="opacity-0 translate-y-5"
-        enter-active-class="transition-all duration-500 ease-out"
-        leave-to-class="opacity-0 scale-95"
-        leave-active-class="transition-all duration-300 ease-in"
-      >
-        <div v-for="entry in entriesForSelectedDate" :key="entry.id" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div class="flex items-start gap-4">
-            <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-2xl">
-              {{ entry.tags[0]?.emoji || '📝' }}
-            </div>
-            <div class="flex-1">
-              <div class="flex flex-wrap gap-2 mb-2">
-                <span v-for="tag in entry.tags" :key="tag.id" class="text-xs font-medium bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full">
-                   {{ tag.emoji }} {{ tag.name }}
-                </span>
+      <Transition name="fade" mode="out-in">
+        <TransitionGroup
+          v-if="entriesForSelectedDate.length > 0"
+          key="entries-list"
+          tag="div"
+          class="space-y-4"
+          enter-from-class="opacity-0 translate-y-5"
+          enter-active-class="transition-all duration-500 ease-out"
+          leave-to-class="opacity-0 scale-95"
+          leave-active-class="transition-all duration-300 ease-in"
+        >
+          <div v-for="entry in entriesForSelectedDate" :key="entry.id" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-2xl">
+                {{ entry.tags[0]?.emoji || '📝' }}
               </div>
-              <p v-if="entry.note" class="text-gray-700">{{ entry.note }}</p>
-              <p class="text-xs text-gray-400 mt-2">{{ formatTime(entry.createdAt) }}</p>
+              <div class="flex-1">
+                <div class="flex flex-wrap gap-2 mb-2">
+                  <span v-for="tag in entry.tags" :key="tag.id" class="text-xs font-medium bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full">
+                    {{ tag.emoji }} {{ tag.name }}
+                  </span>
+                </div>
+                <p v-if="entry.note" class="text-gray-700">{{ entry.note }}</p>
+                <p class="text-xs text-gray-400 mt-2">{{ formatTime(entry.createdAt) }}</p>
+              </div>
             </div>
           </div>
-        </div>
-      </TransitionGroup>
+        </TransitionGroup>
 
-      <div
-        v-if="!entriesForSelectedDate.length && !api.loading.value"
-        class="text-center py-10 px-4 rounded-lg bg-gray-50 border-2 border-dashed"
-      >
-        <p class="text-gray-500">No entries recorded on this day.</p>
-        <RouterLink to="/" class="mt-4 inline-block px-5 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition">
-          Record a new moment
-        </RouterLink>
-      </div>
+        <div
+          v-else-if="!api.loading.value"
+          key="empty-state"
+          class="text-center py-10 px-4 rounded-lg bg-gray-50 border-2 border-dashed"
+        >
+          <p class="text-gray-500">No moments recorded on this day.</p>
+          <RouterLink to="/" class="mt-4 inline-block px-5 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition">
+            Record a new moment
+          </RouterLink>
+        </div>
+      </Transition>
     </section>
   </div>
 </template>
@@ -71,56 +76,57 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useApi } from '@/composables/useApi';
-// 👇 --- 修正点 3: 导入我们新的、更精确的类型 --- 👇
-import type { MoodEntryWithTags, PaginatedMoodEntries } from '@aura/types';
-import { Calendar as VCalendar } from 'v-calendar';
+import type { MoodEntryWithTags } from '@aura/types'; // We only need this type
 import 'v-calendar/style.css';
 import { format } from 'date-fns';
 import { RouterLink } from 'vue-router';
 
 const api = useApi();
-// 👇 --- 修正点 4: 使用更精确的类型 --- 👇
 const allEntries = ref<MoodEntryWithTags[]>([]);
+
 const selectedDate = ref(new Date());
 
+function onDayClick(day: { date: Date }) {
+  console.log('[@dayclick] 用户点击了日期:', day.date);
+  selectedDate.value = day.date;
+}
+
 onMounted(async () => {
-  const response = await api.get<PaginatedMoodEntries>('/mood-entries/mine', { limit: 1000 });
+  // --- The Final, Correct Way to Call the API ---
+  // The generic <MoodEntryWithTags[]> now correctly describes the type of the `data` property inside the response.
+  const response = await api.get<MoodEntryWithTags[]>('/mood-entries/mine', { limit: 1000 });
+
   if (response && response.success) {
-    // 👇 --- 修正点 5: 从分页数据中正确地解构出 data 数组 --- 👇
-    allEntries.value = response.data.data;
+    // Now, response.data is correctly typed as MoodEntryWithTags[]
+    allEntries.value = response.data;
   }
 });
 
-// 👇 --- 修正点 6: 为 calendarAttributes 添加明确的类型，以解决 v-calendar 的类型报错 --- 👇
+// --- The rest of the script remains the same ---
 const calendarAttributes = computed(() => [
   {
     key: 'today',
-    highlight: {
-      color: 'blue',
-      fillMode: 'outline' as const,
-    },
+    highlight: { color: 'blue', fillMode: 'outline' as const },
     dates: [new Date()],
   },
   {
     key: 'entries',
     dot: true,
     dates: allEntries.value.map((entry: MoodEntryWithTags) => new Date(entry.createdAt)),
-
   }
 ]);
 
 const entriesForSelectedDate = computed(() => {
   return allEntries.value.filter((entry: MoodEntryWithTags) => {
-    const entryDate = new Date(entry.createdAt);
-    return entryDate.toDateString() === selectedDate.value.toDateString();
+    return new Date(entry.createdAt).toDateString() === selectedDate.value.toDateString();
   });
 });
 
 const formattedSelectedDate = computed(() => {
+  if (!selectedDate.value) return '';
   return format(selectedDate.value, 'MMMM d, yyyy');
 });
 
-// 👇 --- 修正点 7: 允许 formatTime 接收 Date 或 string 类型 --- 👇
 const formatTime = (dateString: string | Date) => {
   return format(new Date(dateString), 'h:mm a');
 };
@@ -132,5 +138,15 @@ const formatTime = (dateString: string | Date) => {
   --vc-font-family: inherit;
   --vc-rounded-full: 0.5rem;
   --vc-accent-600: #2563eb; /* Tailwind blue-600 */
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
