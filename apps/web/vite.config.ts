@@ -4,10 +4,43 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/postcss'
-
+import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools()],
+  plugins: [
+    vue(),
+    vueDevTools(),
+    VitePWA({
+      registerType: 'autoUpdate', // Automatically update the app when new content is available
+      injectRegister: 'auto',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'], // Cache these file types
+      },
+      manifest: {
+        name: 'Aura - Your Mood Companion',
+        short_name: 'Aura',
+        description:
+          'An anonymous app to record, reflect, and gain insights into your emotional patterns.',
+        theme_color: '#ffffff',
+        background_color: '#f9fafb', // A light gray background
+        display: 'standalone',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      },
+    }),
+  ],
   css: {
     postcss: {
       plugins: [tailwindcss],

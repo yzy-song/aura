@@ -5,6 +5,7 @@
     </main>
     <BottomNav />
     <Toaster rich-colors position="top-center" />
+    <ReloadPWA />
   </div>
 </template>
 
@@ -12,4 +13,5 @@
 import { RouterView } from 'vue-router'
 import BottomNav from '@/components/BottomNav.vue'
 import { Toaster } from 'vue-sonner'
+import ReloadPWA from '@/components/ReloadPWA.vue';
 </script>
