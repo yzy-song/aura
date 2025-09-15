@@ -9,7 +9,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiCommonResponses } from 'src/common/decorators/api-common-responses.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { CurrentProfile } from './decorators/user.decorator';
+import { CurrentProfile } from './decorators/current-profile.decorator';
 import { FirebaseLoginDto } from './dto/firebase-login.dto';
 
 import { ProfileId } from '../common/decorators/profile-id.decorator';

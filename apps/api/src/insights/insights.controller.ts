@@ -1,10 +1,11 @@
-import { Controller, Get, Query, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { InsightsService } from './insights.service';
-import { ProfileId } from '../common/decorators/profile-id.decorator';
-import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
+import { ApiHeader, ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { CurrentProfile } from '../auth/decorators/current-profile.decorator';
 import { ApiCommonResponses } from '../common/decorators/api-common-responses.decorator';
+import type { Profile } from '@aura/database/prisma/client';
 
-// 👇 定义总结报告周期类型
 type SummaryPeriod = '3days' | 'week' | '2weeks' | 'month';
 const DEFAULT_PERIOD: SummaryPeriod = 'week';
 
@@ -13,17 +14,17 @@ const DEFAULT_PERIOD: SummaryPeriod = 'week';
 export class InsightsController {
   constructor(private readonly insightsService: InsightsService) {}
 
-  @Get('mine')
-  @ApiOperation({ summary: '获取我自己的数据洞察' })
-  @ApiHeader({
-    name: 'x-profile-id',
-    description: '当前用户的匿名身份ID',
-    required: true,
-  })
+  @Get('mine') // 新增的个人洞察接口
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiHeader({ name: 'x-profile-id', description: 'For anonymous users', required: false })
+  @ApiOperation({ summary: '获取“我”的数据洞察 (图表)' })
   @ApiCommonResponses()
-  getPersonalInsights(@ProfileId() profileId: string) {
+  getPersonalInsights(@CurrentProfile() profileOrId: Profile | string) {
+    const profileId = typeof profileOrId === 'string' ? profileOrId : profileOrId?.id;
+
     if (!profileId) {
-      throw new UnauthorizedException('x-profile-id header is required');
+      throw new UnauthorizedException('Authentication required.');
     }
     return this.insightsService.getPersonalInsights(profileId);
   }
@@ -36,12 +37,19 @@ export class InsightsController {
   }
 
   @Get('mine/summary')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiHeader({ name: 'x-profile-id', description: 'For anonymous users', required: false })
   @ApiOperation({ summary: '获取“我”的 AI 周期总结报告' })
-  @ApiHeader({ name: 'x-profile-id', required: true })
   @ApiCommonResponses()
-  getPersonalSummary(@ProfileId() profileId: string, @Query('period') period: SummaryPeriod = DEFAULT_PERIOD) {
+  getPersonalSummary(
+    @CurrentProfile() profileOrId: Profile | string,
+    @Query('period') period: SummaryPeriod = DEFAULT_PERIOD,
+  ) {
+    const profileId = typeof profileOrId === 'string' ? profileOrId : profileOrId?.id;
+
     if (!profileId) {
-      throw new UnauthorizedException('x-profile-id header is required');
+      throw new UnauthorizedException('Authentication required.');
     }
     return this.insightsService.getPersonalSummary(profileId, period);
   }

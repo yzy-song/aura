@@ -2,7 +2,7 @@
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -10,36 +10,31 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    // 1. 先从 ConfigService 获取密钥
     const secret = configService.get<string>('JWT_SECRET');
-
-    // 2. 检查密钥是否存在，如果不存在则抛出错误，使应用启动失败
     if (!secret) {
-      throw new Error('JWT_SECRET is not defined in the environment variables');
+      throw new Error('JWT_SECRET is not set in environment variables');
     }
-
-    // 3. 确认密钥存在后，再将其传入 super()
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: secret, // <-- 此处 secret 的类型被 TypeScript 推断为明确的 string
+      secretOrKey: secret,
     });
   }
 
-  // 4. Passport 在验证 Token 签名有效后，会调用这个方法
-  //    payload 是 Token 解码后的 JSON 对象
-  async validate(payload: { sub: string; email: string }) {
-    const user = await this.prisma.profile.findUnique({
+  /**
+   * Passport 在验证 Token 签名有效后，会自动调用这个方法
+   * @param payload - Token 解码后的 JSON 对象 (我们在 AuthService 里存了 { sub: profile.id })
+   */
+  async validate(payload: { sub: string }) {
+    // 👇 核心修正：去 Profile 表里查找用户
+    const profile = await this.prisma.profile.findUnique({
       where: { id: payload.sub },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('无效的令牌');
+    if (!profile) {
+      throw new UnauthorizedException('Invalid token or user does not exist.');
     }
-
-    const { ...userWithoutPassword } = user;
-
-    // 此处返回的用户对象，会被 Passport 附加到 Request 对象上 (req.user)
-    return userWithoutPassword;
+    // 返回的 profile 对象会被 Passport 自动附加到 request.user 上
+    return profile;
   }
 }
