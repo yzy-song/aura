@@ -1,43 +1,82 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { api } from '@/services/apiClient' // 直接导入 api 对象
+import { ref, computed } from 'vue'
+import { api } from '@/services/apiClient'
 import { logger } from '@/utils/logger'
-import type { BackendResponse, Profile } from '@aura/types' // 导入共享类型
+import type { Profile, BackendResponse } from '@aura/types'
 
 export const useProfileStore = defineStore('profile', () => {
-  const profileId = ref<string | null>(localStorage.getItem('auraProfileId'))
+  // --- State ---
+  const profile = ref<Profile | null>(null)
+  const accessToken = ref<string | null>(localStorage.getItem('auraAccessToken'))
 
-  async function initProfile() {
-    // 如果本地已有ID，直接使用
-    if (profileId.value) {
-      logger.info('Profile ID loaded from localStorage:', profileId.value)
+  // --- Getters (计算属性) ---
+  const isAuthenticated = computed(() => !!accessToken.value)
+  const profileId = computed(() => profile.value?.id || localStorage.getItem('auraProfileId'))
+
+  // --- Actions (操作) ---
+
+  // 设置认证信息 (登录成功后调用)
+  function setAuthData({
+    newProfile,
+    newAccessToken,
+  }: {
+    newProfile: Profile
+    newAccessToken: string
+  }) {
+    profile.value = newProfile
+    accessToken.value = newAccessToken
+    localStorage.setItem('auraAccessToken', newAccessToken)
+    // 登录后，我们就不再需要匿名的 ID 了
+    localStorage.removeItem('auraProfileId')
+    logger.info('Authentication data set. User is logged in.', newProfile)
+  }
+
+  // 登出
+  function logout() {
+    profile.value = null
+    accessToken.value = null
+    localStorage.removeItem('auraAccessToken')
+    // 登出后，获取一个新的匿名身份
+    initAnonymousProfile()
+    logger.info('User logged out.')
+  }
+
+  // 初始化匿名 Profile (应用启动时或登出后调用)
+  async function initAnonymousProfile() {
+    if (isAuthenticated.value) {
+      logger.info('User is authenticated, skipping anonymous profile creation.')
       return
     }
 
-    // 如果本地没有ID，调用 API 创建
-    try {
-      logger.info('No local Profile ID found, creating a new one...')
+    const anonymousId = localStorage.getItem('auraProfileId')
+    if (anonymousId) {
+      logger.info('Anonymous profile ID loaded from localStorage:', anonymousId)
+      // 未来可以考虑根据匿名ID去后端获取profile信息
+      return
+    }
 
-      // 👇 直接调用 api.post，不再通过 useApi
+    try {
+      logger.info('No local anonymous ID found, creating a new one...')
       const response = await api.post<BackendResponse<Profile>>('/profiles', {
         anonymousName: `Wandering Soul #${Math.floor(Math.random() * 1000)}`,
         avatarId: `avatar-${Math.floor(Math.random() * 10)}`,
       })
 
       if (response && response.success) {
-        const newProfileId = response.data.id
-        localStorage.setItem('auraProfileId', newProfileId)
-        profileId.value = newProfileId
-        logger.info('New Profile created and saved:', newProfileId)
-      } else {
-        // 处理 API 返回 success: false 的情况
-        throw new Error(response?.message || 'Failed to create profile')
+        localStorage.setItem('auraProfileId', response.data.id)
       }
     } catch (error) {
-      logger.error('Failed to initialize profile:', error)
-      // 在这里可以添加一些错误处理逻辑，比如向用户显示一个全局错误提示
+      logger.error('Failed to initialize anonymous profile:', error)
     }
   }
 
-  return { profileId, initProfile }
+  return {
+    profile,
+    accessToken,
+    isAuthenticated,
+    profileId,
+    initAnonymousProfile,
+    setAuthData,
+    logout,
+  }
 })

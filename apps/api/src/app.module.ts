@@ -9,6 +9,8 @@ import { MoodEntriesModule } from './mood-entries/mood-entries.module';
 import { InsightsModule } from './insights/insights.module';
 import { AiModule } from './common/ai/ai.module';
 import { AppLogger } from './common/utils/logger';
+import { FirebaseAdminModule } from './common/firebase/firebase-admin.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { AppLogger } from './common/utils/logger';
     MoodEntriesModule,
     InsightsModule,
     AiModule,
+    FirebaseAdminModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLogger],

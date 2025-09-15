@@ -47,3 +47,8 @@ export type MoodEntryWithTags = PrismaMoodEntry & {
 // 明确定义 API 返回的分页数据结构
 export interface PaginatedMoodEntries
   extends PaginatedResult<MoodEntryWithTags> {}
+
+export interface AuthResponse {
+  accessToken: string;
+  profile: Profile;
+}

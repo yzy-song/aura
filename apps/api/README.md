@@ -36,3 +36,6 @@ tags: Tag[]: 这是一个多对多关系。
 功能: 它允许一条情绪记录同时关联多个标签。
 
 相比您最初的设计: 这是一个巨大的升级。最初我们想的是一条记录只对应一个标签ID，现在则可以表达更复杂的情绪（比如：我感到**“平静”，因为我正在“阅读”**）。这让数据洞察的可能性大大增加。
+
+pnpm --filter @aura/database exec prisma migrate dev --name add-identity-table
+pnpm --filter @aura/database run generate

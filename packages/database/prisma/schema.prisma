@@ -17,6 +17,18 @@ enum TagType {
   ACTIVITY
 }
 
+model Identity {
+  id         String @id @default(cuid())
+  provider   String // 例如 "firebase"
+  providerId String // 来自 Firebase 的 UID
+
+  profile   Profile @relation(fields: [profileId], references: [id])
+  profileId String
+
+  // 关键：确保每个第三方身份都是唯一的
+  @@unique([provider, providerId])
+}
+
 model AiSummary {
   id        Int      @id @default(autoincrement())
   period    String   // e.g., "week-2025-37" or "month-2025-09"
@@ -45,6 +57,8 @@ model Profile {
   moodEntries   MoodEntry[]
   customTags    Tag[]
   aiSummaries   AiSummary[]
+  // 一个用户可以同时绑定多个平台: google, twitter
+  identities    Identity[]
 }
 
 // 情绪或活动的标签

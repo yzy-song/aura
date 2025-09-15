@@ -15,10 +15,19 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     logger.info('[API Request]', config.method?.toUpperCase(), config.url)
-    const profileStore = useProfileStore()
-    if (profileStore.profileId) {
-      config.headers['X-Profile-Id'] = profileStore.profileId
+
+    // 优先使用登录后获取的 accessToken
+    const token = localStorage.getItem('auraAccessToken')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    } else {
+      // 如果没有 accessToken (未登录)，则回退到使用匿名的 profileId
+      const profileStore = useProfileStore()
+      if (profileStore.profileId) {
+        config.headers['X-Profile-Id'] = profileStore.profileId
+      }
     }
+
     return config
   },
   (error) => Promise.reject(error),

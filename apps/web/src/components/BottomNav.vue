@@ -45,6 +45,20 @@
           <span class="text-xs font-medium">Insights</span>
         </div>
       </RouterLink>
+      <RouterLink to="/settings" v-slot="{ isActive }">
+        <div
+          class="flex flex-col items-center justify-center gap-1 w-1/3 transition-colors"
+          :class="isActive ? 'text-blue-600' : 'text-gray-500'"
+        >
+          <span
+            class="material-symbols-outlined"
+            :style="{ fontVariationSettings: isActive ? `'FILL' 1` : `'FILL' 0` }"
+          >
+            settings
+          </span>
+          <span class="text-xs font-medium">Settings</span>
+        </div>
+      </RouterLink>
     </nav>
   </footer>
 </template>

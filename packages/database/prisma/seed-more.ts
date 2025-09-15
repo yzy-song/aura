@@ -5,9 +5,9 @@ const prisma = new PrismaClient();
 // 👇 --- 请在这里填入您自己的 Profile ID --- 👇
 // 您可以从前端应用的 localStorage，或者直接在数据库的 Profile 表中找到这些 ID
 const YOUR_PROFILE_IDS = [
-  "cmfhcbtty0000b7hgrwdihtst",
-  "cmfhcbtu10001b7hgkjbyhtqg",
-  "cmfhn56hl0001b72wqfkti3y5",
+  // "cmfhcbtty0000b7hgrwdihtst",
+  // "cmfhcbtu10001b7hgkjbyhtqg",
+  // "cmfhn56hl0001b72wqfkti3y5",
   "cmfhnc3zf0003b72wmyzxknmr",
   "cmfi458570000b7f8jd2692iy",
   "cmfi458580001b7f88xk1yqs4",

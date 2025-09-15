@@ -19,7 +19,7 @@ const profileStore = useProfileStore()
 
 // 2. 执行初始化操作
 profileStore
-  .initProfile()
+  .initAnonymousProfile()
   .then(() => {
     // 3. 确保在获取到 profileId 之后再挂载应用
     app.mount('#app')
