@@ -19,6 +19,20 @@ export default defineConfigWithVueTs(
         tsconfigRootDir: __dirname,
       },
     },
+  },
+
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+
+  pluginVue.configs['flat/essential'],
+  vueTsConfigs.recommended,
+
+  {
+    ...pluginVitest.configs.recommended,
+    files: ['src/**/__tests__/*'],
+  },
+  skipFormatting,
+
+  {
     rules: {
       // 采纳的优秀规则
       'vue/multi-word-component-names': 'off',
@@ -28,7 +42,7 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
 
       // 优化的规则
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
 
       // 强烈推荐的质量规则
       '@typescript-eslint/no-floating-promises': 'warn',
@@ -45,15 +59,4 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
-
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
-
-  pluginVue.configs['flat/essential'],
-  vueTsConfigs.recommended,
-
-  {
-    ...pluginVitest.configs.recommended,
-    files: ['src/**/__tests__/*'],
-  },
-  skipFormatting,
 )

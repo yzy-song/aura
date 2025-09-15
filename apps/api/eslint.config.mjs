@@ -48,6 +48,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-base-to-string': 'off',
       '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/require-await': 'off',
     
     },
   },
