@@ -46,27 +46,32 @@
           </button>
         </div>
 
-        <div class="relative bg-blue-50/50 p-4 rounded-lg min-h-[120px]">
-          <Transition name="fade">
-            <div
-              v-if="summaryApi.loading.value"
-              class="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center rounded-lg"
-            >
+        <div class="relative bg-blue-50/50 p-4 rounded-lg min-h-[120px] overflow-hidden">
+          <p v-if="currentSummary" class="text-gray-800 leading-relaxed">
+            {{ currentSummary }}
+          </p>
+
+          <div v-else class="absolute inset-0">
+            <div class="w-full h-full text-gray-500 flex items-center justify-center blur-sm scale-110">
+              Keep recording your moments to unlock personalized insights. I'm here to listen whenever you're ready.
+            </div>
+
+            <div v-if="summaryApi.loading.value" class="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg">
               <div class="text-gray-500 animate-pulse">Generating your new summary...</div>
             </div>
-          </Transition>
 
-          <div v-if="summaryApi.error.value" class="text-red-600 text-sm flex items-center justify-center h-full">
-            Sorry, I couldn't generate a summary right now.
-          </div>
-          <p v-else-if="summary" class="text-gray-800 leading-relaxed transition-opacity duration-300">
-            {{ summary }}
-          </p>
-          <div v-else class="text-gray-500 flex items-center justify-center h-full">
-            Select a period to generate your summary.
+            <div v-else-if="summaryApi.error.value" class="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg text-center">
+               <p class="text-red-600 text-sm">Sorry, I couldn't generate a summary right now.</p>
+            </div>
+
+            <div v-else class="absolute inset-0 flex items-center justify-center">
+              <button @click="handleGenerateClick" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all">
+                ✨ Generate Reflection
+              </button>
+            </div>
           </div>
         </div>
-      </section>
+        </section>
 
       <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
         <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-4">
@@ -101,6 +106,8 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import { useApi } from '@/composables/useApi';
+import { useInsightsStore } from '@/composables/useInsightsStore';
+
 import PieChart from '@/components/PieChart.vue';
 import LineChart from '@/components/LineChart.vue';
 import { format } from 'date-fns';
@@ -120,19 +127,25 @@ interface SummaryData {
 
 // --- Component State & API ---
 const api = useApi();
-const summaryApi = useApi(); // Separate instance for the summary card's state
+const summaryApi = useApi();
 const activeTab = ref<'mine' | 'public'>('mine');
 const insightsData = ref<InsightsData | null>(null);
 
 // State for the AI summary feature
 const selectedPeriod = ref<SummaryPeriod>('week');
-const summary = ref<string>('');
+// --- MODIFICATION: Store generated summaries in a Record (Object) ---
+const { generatedSummaries } = useInsightsStore();
+
+
 const periods: { label: string; value: SummaryPeriod }[] = [
   { label: 'Last 3 Days', value: '3days' },
   { label: 'Last Week', value: 'week' },
   { label: 'Last 2 Weeks', value: '2weeks' },
   { label: 'Last Month', value: 'month' },
 ];
+
+// --- Computed property to get the current summary ---
+const currentSummary = computed(() => generatedSummaries.value[selectedPeriod.value]);
 
 // --- Logic ---
 const fetchChartData = async () => {
@@ -143,19 +156,31 @@ const fetchChartData = async () => {
 
 const fetchSummary = async () => {
   if (activeTab.value !== 'mine') return;
+
+  // Don't fetch if it's already loading
+  if (summaryApi.loading.value) return;
+
   const response = await summaryApi.get<SummaryData>(`/insights/mine/summary?period=${selectedPeriod.value}`);
-  summary.value = response?.success ? response.data.summary : '';
+
+  // --- MODIFICATION: Store the result in our new state object ---
+  if (response?.success) {
+    generatedSummaries.value[selectedPeriod.value] = response.data.summary;
+  }
+};
+
+// --- New function to handle the button click ---
+const handleGenerateClick = () => {
+  fetchSummary();
 };
 
 // Watch for changes and fetch data accordingly
-watch(activeTab, (newTab) => {
+watch(activeTab, () => {
   fetchChartData();
-  if (newTab === 'mine') {
-    fetchSummary();
-  }
+  // We no longer fetch the summary automatically when the tab changes
 }, { immediate: true });
 
-watch(selectedPeriod, fetchSummary);
+// --- MODIFICATION: Remove the watcher that automatically fetches the summary ---
+// watch(selectedPeriod, fetchSummary); // <-- REMOVED
 
 // --- Computed properties for charts (no changes) ---
 const emotionChartData = computed(() => {
