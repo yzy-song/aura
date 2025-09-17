@@ -38,7 +38,7 @@ export const useProfileStore = defineStore('profile', () => {
     localStorage.removeItem('auraAccessToken')
     // 登出后，获取一个新的匿名身份
     initAnonymousProfile()
-    logger.info('User logged out.')
+    logger.info('User logged out.111111111111111')
   }
 
   // 初始化匿名 Profile (应用启动时或登出后调用)

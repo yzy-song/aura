@@ -142,11 +142,11 @@ export class InsightsService {
     });
 
     if (cachedSummary) {
-      console.log(`[Cache HIT] Found summary for ${profileId} for period ${periodKey}`);
+      this.logger.log(`[Cache HIT] Found summary for ${profileId} for period ${periodKey}`);
       return { summary: cachedSummary.summary };
     }
 
-    console.log(`[Cache MISS] No summary for ${profileId}, period ${periodKey}. Generating new one...`);
+    this.logger.log(`[Cache MISS] No summary for ${profileId}, period ${periodKey}. Generating new one...`);
 
     // 4. 如果没有缓存，则从数据库获取相应天数的数据
     const entries = await this.prisma.moodEntry.findMany({
@@ -162,13 +162,16 @@ export class InsightsService {
     const newSummaryText = await this.aiService.generateSummary(entries);
 
     // 6. 将新生成的总结存入数据库
-    await this.prisma.aiSummary.create({
-      data: {
-        profileId,
-        period: periodKey,
-        summary: newSummaryText,
-      },
-    });
+    // 4. 只有有效 summary 才写入缓存
+    if (newSummaryText && newSummaryText !== this.aiService.DEFAULT_SUMMARY) {
+      await this.prisma.aiSummary.create({
+        data: {
+          profileId,
+          period: periodKey,
+          summary: newSummaryText,
+        },
+      });
+    }
 
     return { summary: newSummaryText };
   }

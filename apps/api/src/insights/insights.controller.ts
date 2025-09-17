@@ -1,10 +1,10 @@
 import { Controller, Get, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { InsightsService } from './insights.service';
 import { ApiHeader, ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentProfile } from '../auth/decorators/current-profile.decorator';
 import { ApiCommonResponses } from '../common/decorators/api-common-responses.decorator';
 import type { Profile } from '@aura/database/prisma/client';
+import { JwtOptionalGuard } from 'src/auth/guards/jwt-optional.guard';
 
 type SummaryPeriod = '3days' | 'week' | '2weeks' | 'month';
 const DEFAULT_PERIOD: SummaryPeriod = 'week';
@@ -15,7 +15,7 @@ export class InsightsController {
   constructor(private readonly insightsService: InsightsService) {}
 
   @Get('mine') // 新增的个人洞察接口
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtOptionalGuard)
   @ApiBearerAuth()
   @ApiHeader({ name: 'x-profile-id', description: 'For anonymous users', required: false })
   @ApiOperation({ summary: '获取“我”的数据洞察 (图表)' })
@@ -37,7 +37,7 @@ export class InsightsController {
   }
 
   @Get('mine/summary')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtOptionalGuard)
   @ApiBearerAuth()
   @ApiHeader({ name: 'x-profile-id', description: 'For anonymous users', required: false })
   @ApiOperation({ summary: '获取“我”的 AI 周期总结报告' })

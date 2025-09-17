@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import type { MoodEntryWithTags } from '@aura/types';
@@ -7,7 +7,9 @@ import type { MoodEntryWithTags } from '@aura/types';
 export class AiService {
   private readonly apiKey: string;
   private readonly apiEndpoint = 'https://api.deepseek.com/chat/completions';
-
+  private readonly logger = new Logger(AiService.name);
+  public DEFAULT_SUMMARY =
+    "Keep recording your moments to unlock personalized insights. I'm here to listen whenever you're ready.";
   constructor(private configService: ConfigService) {
     this.apiKey = this.configService.get<string>('DEEPSEEK_API_KEY');
     if (!this.apiKey) {
@@ -16,12 +18,13 @@ export class AiService {
   }
 
   async generateSummary(entries: MoodEntryWithTags[]): Promise<string> {
+    this.logger.log(`Generating summary for ${entries.length} mood entries.`, AiService.name);
+
     if (entries.length < 3) {
       // 增加一个判断，数据太少时提供固定回复
-      return "Keep recording your moments to unlock personalized insights. I'm here to listen whenever you're ready.";
+      return this.DEFAULT_SUMMARY;
     }
 
-    // 👇 --- 全新的、经过优化的 Prompt --- 👇
     const { systemPrompt, userPrompt } = this.buildAdvancedPrompt(entries);
 
     try {
