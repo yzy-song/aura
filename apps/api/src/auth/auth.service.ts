@@ -72,7 +72,7 @@ export class AuthService {
     return this.prisma.profile.create({
       data: {
         anonymousName: name || `User #${uid.slice(0, 5)}`,
-        avatarId: `avatar-${Math.floor(Math.random() * 10)}`,
+        avatarUrl: `avatar-${Math.floor(Math.random() * 10)}`,
       },
     });
   }

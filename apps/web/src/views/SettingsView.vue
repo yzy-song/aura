@@ -6,30 +6,46 @@
     </header>
 
     <div v-if="profileStore.isAuthenticated && profileStore.profile" class="space-y-6">
-      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-3xl font-bold text-blue-600">
-          <span>{{ profileStore.profile.anonymousName.charAt(0).toUpperCase() }}</span>
+      <!-- 头像上传区 -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center gap-4">
+        <div class="relative">
+          <img
+            :src="avatarPreviewUrl || profileStore.profile.avatarUrl || `https://api.dicebear.com/8.x/initials/svg?seed=${profileStore.profile.anonymousName}`"
+            alt="User Avatar"
+            class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
+          />
+          <button @click="triggerFileInput" class="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 transition">
+            <span class="material-symbols-outlined text-base">edit</span>
+          </button>
+          <input type="file" ref="fileInput" @change="handleFileChange" accept="image/*" class="hidden" />
         </div>
-        <div>
-          <h2 class="text-xl font-bold text-gray-800">{{ profileStore.profile.anonymousName }}</h2>
-          <p class="text-sm text-gray-500">Account is synced and secure.</p>
+        <button v-if="selectedFile" @click="handleAvatarUpload" :disabled="isUploading" class="px-4 py-2 text-sm font-semibold bg-green-500 text-white rounded-full hover:bg-green-600 transition disabled:bg-gray-400">
+          {{ isUploading ? 'Uploading...' : 'Save Avatar' }}
+        </button>
+      </div>
+
+      <!-- 昵称修改区 -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Display Name</h3>
+        <div class="flex items-center gap-2">
+          <input type="text" v-model="editableName" class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" />
+          <button @click="handleNameUpdate" :disabled="isUpdatingName" class="px-5 h-10 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition disabled:bg-gray-400">
+            {{ isUpdatingName ? 'Saving...' : 'Save' }}
+          </button>
         </div>
       </div>
 
+      <!-- 其它设置区 -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <h3 class="text-lg font-semibold text-gray-700 mb-4">Preferences</h3>
         <p class="text-gray-500">Theme, notifications, etc. (Coming soon)</p>
       </div>
-
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <h3 class="text-lg font-semibold text-gray-700 mb-4">Data</h3>
         <p class="text-gray-500">Export your data. (Coming soon)</p>
       </div>
 
-      <button
-        @click="handleSignOut"
-        class="w-full h-12 px-5 rounded-lg bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors"
-      >
+      <button @click="handleSignOut" class="w-full h-12 px-5 rounded-lg bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors">
         Sign Out
       </button>
     </div>
@@ -65,19 +81,88 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, type AuthProvider, signOut } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { useApi } from '@/composables/useApi';
 import { useProfileStore } from '@/stores/profile.store';
 import { useEventBus } from '@/composables/useEventBus';
-import type { AuthResponse } from '@aura/types';
+import type { AuthResponse, Profile, BackendResponse } from '@aura/types';
+import { apiClient } from '@/services/apiClient';
 
 const { post } = useApi();
 const profileStore = useProfileStore();
 const { emit } = useEventBus();
-const isLoading = ref(false);
 
+// --- State for Profile Editing ---
+const editableName = ref(profileStore.profile?.anonymousName || '');
+const isUpdatingName = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
+const selectedFile = ref<File | null>(null);
+const avatarPreviewUrl = ref<string | null>(null);
+const isUploading = ref(false);
+
+// 监视 store 的变化，以确保在 fetchProfile 后能更新本地的 editableName
+watch(() => profileStore.profile, (newProfile) => {
+  if (newProfile) {
+    editableName.value = newProfile.anonymousName;
+  }
+}, { immediate: true });
+
+// --- Avatar Logic ---
+const triggerFileInput = () => fileInput.value?.click();
+
+const handleFileChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    selectedFile.value = target.files[0];
+    avatarPreviewUrl.value = URL.createObjectURL(selectedFile.value);
+  }
+};
+
+const handleAvatarUpload = async () => {
+  if (!selectedFile.value) return;
+  isUploading.value = true;
+
+  const formData = new FormData();
+  formData.append('file', selectedFile.value);
+
+  try {
+    const response = await apiClient.patch<BackendResponse<Profile>>('/profiles/me/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    if (response.data && response.data.success) {
+      profileStore.setProfile(response.data.data);
+      emit('toast:show', { message: 'Avatar updated successfully!', type: 'success' });
+      selectedFile.value = null;
+      avatarPreviewUrl.value = null;
+    } else {
+      throw new Error(response.data.message || 'Avatar upload failed.');
+    }
+  } catch (error: any) {
+    emit('toast:show', { message: error.message, type: 'error' });
+  } finally {
+    isUploading.value = false;
+  }
+};
+
+// --- Name Update Logic ---
+const handleNameUpdate = async () => {
+  if (!editableName.value || editableName.value === profileStore.profile?.anonymousName) {
+    return;
+  }
+  isUpdatingName.value = true;
+  const response = await apiClient.patch<BackendResponse<Profile>>('/profiles/me', { anonymousName: editableName.value });
+  if (response && response.data.success) {
+    profileStore.setProfile(response.data.data);
+    emit('toast:show', { message: 'Name updated successfully!', type: 'success' });
+  }
+  isUpdatingName.value = false;
+};
+
+// --- Sign In / Sign Out Logic ---
+const isLoading = ref(false);
 const handleSignIn = async (providerName: 'google' | 'twitter') => {
   isLoading.value = true;
   let provider: AuthProvider;

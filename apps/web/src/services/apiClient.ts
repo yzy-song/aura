@@ -23,6 +23,7 @@ apiClient.interceptors.request.use(
     } else {
       // 如果没有 accessToken (未登录)，则回退到使用匿名的 profileId
       const profileStore = useProfileStore()
+      console.log('Using profileId:', profileStore.profileId)
       if (profileStore.profileId) {
         config.headers['X-Profile-Id'] = profileStore.profileId
       }

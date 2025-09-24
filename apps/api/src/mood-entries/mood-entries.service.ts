@@ -51,7 +51,7 @@ export class MoodEntriesService {
         profile: {
           select: {
             anonymousName: true,
-            avatarId: true,
+            avatarUrl: true,
           },
         },
         tags: true,

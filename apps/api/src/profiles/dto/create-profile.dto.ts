@@ -5,7 +5,7 @@ export class CreateProfileDto {
   @IsString()
   anonymousName: string;
 
-  @ApiProperty({ example: 'avatar123', description: '头像ID' })
+  @ApiProperty({ example: 'avatar123', description: '头像URL' })
   @IsString()
-  avatarId: string;
+  avatarUrl: string;
 }

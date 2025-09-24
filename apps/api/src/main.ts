@@ -71,7 +71,7 @@ async function bootstrap() {
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type, Authorization, Accept, x-profile-id', // 允许自定义头x-profile-id
+    allowedHeaders: 'Content-Type, Authorization, Accept, x-profile-id', // 允许自定义头
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });

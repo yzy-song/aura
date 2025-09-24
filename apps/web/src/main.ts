@@ -13,17 +13,16 @@ const app = createApp(App)
 app.use(createPinia()) // 注册 Pinia
 app.use(router)
 
-app.use(VCalendar, {}) // 必须有这行
+app.use(VCalendar, {})
 // 1. 获取 profile store 的实例
 const profileStore = useProfileStore()
 
 // 2. 执行初始化操作
-profileStore
-  .initAnonymousProfile()
+Promise.all([profileStore.initAnonymousProfile(), profileStore.fetchProfile()])
   .then(() => {
-    // 3. 确保在获取到 profileId 之后再挂载应用
     app.mount('#app')
   })
   .catch((error) => {
-    console.error('Failed to initialize profile:', error)
+    console.error('Failed to initialize app state:', error)
+    app.mount('#app')
   })

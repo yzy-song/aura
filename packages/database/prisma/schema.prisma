@@ -48,7 +48,7 @@ model Profile {
   id            String      @id @default(cuid())
   // 方便用户识别的匿名昵称和头像ID，可以在客户端生成
   anonymousName String
-  avatarId      String
+  avatarUrl     String? 
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

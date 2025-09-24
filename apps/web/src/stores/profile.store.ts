@@ -12,8 +12,11 @@ export const useProfileStore = defineStore('profile', () => {
   // --- Getters (计算属性) ---
   const isAuthenticated = computed(() => !!accessToken.value)
   const profileId = computed(() => profile.value?.id || localStorage.getItem('auraProfileId'))
-
   // --- Actions (操作) ---
+
+  function setProfile(newProfile: Profile) {
+    profile.value = newProfile
+  }
 
   // 设置认证信息 (登录成功后调用)
   function setAuthData({
@@ -32,13 +35,12 @@ export const useProfileStore = defineStore('profile', () => {
   }
 
   // 登出
-  function logout() {
+  async function logout() {
     profile.value = null
     accessToken.value = null
     localStorage.removeItem('auraAccessToken')
     // 登出后，获取一个新的匿名身份
-    initAnonymousProfile()
-    logger.info('User logged out.111111111111111')
+    await initAnonymousProfile()
   }
 
   // 初始化匿名 Profile (应用启动时或登出后调用)
@@ -59,7 +61,7 @@ export const useProfileStore = defineStore('profile', () => {
       logger.info('No local anonymous ID found, creating a new one...')
       const response = await api.post<BackendResponse<Profile>>('/profiles', {
         anonymousName: `Wandering Soul #${Math.floor(Math.random() * 1000)}`,
-        avatarId: `avatar-${Math.floor(Math.random() * 10)}`,
+        avatarUrl: '/avatars/panda.png',
       })
 
       if (response && response.success) {
@@ -70,6 +72,22 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
+  async function fetchProfile() {
+    if (isAuthenticated.value && !profile.value) {
+      try {
+        const response = await api.get<BackendResponse<Profile>>('/profiles/me')
+        if (response && response.success) {
+          profile.value = response.data
+        } else {
+          logout() // Token 可能无效，执行登出
+        }
+      } catch (error) {
+        logger.error('Failed to fetch profile:', error)
+        logout()
+      }
+    }
+  }
+
   return {
     profile,
     accessToken,
@@ -77,6 +95,8 @@ export const useProfileStore = defineStore('profile', () => {
     profileId,
     initAnonymousProfile,
     setAuthData,
+    setProfile,
     logout,
+    fetchProfile,
   }
 })

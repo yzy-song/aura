@@ -11,6 +11,7 @@ import { AiModule } from './common/ai/ai.module';
 import { AppLogger } from './common/utils/logger';
 import { FirebaseAdminModule } from './common/firebase/firebase-admin.module';
 import { AuthModule } from './auth/auth.module';
+import { CloudinaryModule } from './common/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthModule } from './auth/auth.module';
     AiModule,
     FirebaseAdminModule,
     AuthModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLogger],
