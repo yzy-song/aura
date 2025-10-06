@@ -9,6 +9,8 @@
     "./prisma/client": "./prisma/client/index.js"
   },
   "scripts": {
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
     "generate": "prisma generate --schema=./prisma/schema.prisma",
     "db:seed": "ts-node prisma/seed.ts",
     "db:seed:more": "ts-node prisma/seed-more.ts"
