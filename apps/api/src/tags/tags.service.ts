@@ -11,7 +11,7 @@ export class TagsService {
   private readonly logger = new Logger(TagsService.name);
   // 创建一个自定义标签
   async create(profileId: string, createTagDto: CreateTagDto) {
-    this.logger.log(`创建标签: ${JSON.stringify(createTagDto)}`, TagsService.name);
+    this.logger.log(`创建标签: ${JSON.stringify(createTagDto)}, profileId: ${profileId}`, TagsService.name);
 
     // 验证 profileId 是否存在
     const profile = await this.prisma.profile.findUnique({ where: { id: profileId } });
@@ -24,7 +24,7 @@ export class TagsService {
         name: createTagDto.name,
         type: createTagDto.type,
         emoji: createTagDto.emoji,
-        profileId: profileId, // 关联到当前用户
+        profileId: profileId, // 关联到当前用户（无论是匿名还是登录用户）
       },
     });
   }

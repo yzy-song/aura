@@ -33,14 +33,14 @@ async function main() {
   const profile1 = await prisma.profile.create({
     data: {
       anonymousName: "Optimistic Sunflower",
-      avatarId: "sunflower-01",
+      avatarUrl: "/avatars/panda.png",
     },
   });
 
   const profile2 = await prisma.profile.create({
     data: {
       anonymousName: "Pondering Owl",
-      avatarId: "owl-02",
+      avatarUrl: "/avatars/panda.png",
     },
   });
   console.log("Created mock profiles.");

@@ -159,6 +159,7 @@ export class InsightsService {
     });
 
     // 5. 调用 AI 服务生成新的总结
+    this.logger.log(`Generating new summary for ${profileId}, period ${periodKey}, entries count: ${entries.length}`);
     const newSummaryText = await this.aiService.generateSummary(entries);
 
     // 6. 将新生成的总结存入数据库

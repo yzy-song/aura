@@ -176,7 +176,18 @@ const handleSignIn = async (providerName: 'google' | 'twitter') => {
     const result = await signInWithPopup(auth, provider);
     const idToken = await result.user.getIdToken();
 
+    // 临时设置匿名用户的 profileId 到请求头，以便后端可以获取
+    const anonymousProfileId = localStorage.getItem('auraProfileId');
+    const originalHeaders = apiClient.defaults.headers.common;
+
+    if (anonymousProfileId) {
+      apiClient.defaults.headers.common['X-Profile-Id'] = anonymousProfileId;
+    }
+
     const response = await post<AuthResponse>('/auth/link-firebase', { idToken });
+
+    // 恢复原始的请求头配置
+    apiClient.defaults.headers.common = originalHeaders;
 
     if (response && response.success) {
       profileStore.setAuthData({
