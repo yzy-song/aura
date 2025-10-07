@@ -47,24 +47,30 @@
         </div>
 
         <div class="relative bg-blue-50/50 p-4 rounded-lg min-h-[120px] overflow-hidden">
+          <!-- 有总结时显示总结 -->
           <p v-if="currentSummary" class="text-gray-800 leading-relaxed">
             {{ currentSummary }}
           </p>
 
+          <!-- 无总结时的交互区域 -->
           <div v-else class="absolute inset-0">
-            <div class="w-full h-full text-gray-500 flex items-center justify-center blur-sm scale-110">
+            <!-- 默认提示文字（仅在非加载、非错误状态时显示） -->
+            <div v-if="!summaryApi.loading.value && !summaryApi.error.value" class="w-full h-full text-gray-500 flex items-center justify-center blur-sm scale-110">
               Keep recording your moments to unlock personalized insights. I'm here to listen whenever you're ready.
             </div>
 
+            <!-- 加载状态 -->
             <div v-if="summaryApi.loading.value" class="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg">
               <div class="text-gray-500 animate-pulse">Generating your new summary...</div>
             </div>
 
+            <!-- 错误状态 -->
             <div v-else-if="summaryApi.error.value" class="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg text-center">
                <p class="text-red-600 text-sm">Sorry, I couldn't generate a summary right now.</p>
             </div>
 
-            <div v-else class="absolute inset-0 flex items-center justify-center">
+            <!-- 生成按钮（仅在非加载、非错误状态时显示） -->
+            <div v-else-if="!summaryApi.loading.value && !summaryApi.error.value" class="absolute inset-0 flex items-center justify-center">
               <button @click="handleGenerateClick" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all">
                 ✨ Generate Reflection
               </button>
@@ -176,8 +182,24 @@ const handleGenerateClick = () => {
 // Watch for changes and fetch data accordingly
 watch(activeTab, () => {
   fetchChartData();
-  // We no longer fetch the summary automatically when the tab changes
+  // Clear summary when switching tabs
+  generatedSummaries.value = {
+    '3days': '',
+    week: '',
+    '2weeks': '',
+    month: '',
+  };
 }, { immediate: true });
+
+// Clear summary when mood data changes (allow regeneration)
+watch(insightsData, () => {
+  generatedSummaries.value = {
+    '3days': '',
+    week: '',
+    '2weeks': '',
+    month: '',
+  };
+}, { deep: true });
 
 // --- MODIFICATION: Remove the watcher that automatically fetches the summary ---
 // watch(selectedPeriod, fetchSummary); // <-- REMOVED
